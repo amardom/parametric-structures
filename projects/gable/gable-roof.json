@@ -1,0 +1,22 @@
+{
+  "geometry": {
+    "width_m": 6.0,
+    "depth_m": 4.0,
+    "projection_m": 2.0,
+    "eave_height_m": 3.0,
+    "rise_m": 0.8,
+    "roof_thickness_m": 0.18,
+    "column_side_m": 0.35
+  },
+  "loads": {"corner_uplift_pa": 8000},
+  "mesh": {
+    "element_size_m": 0.2
+  },
+  "structural_model": {
+    "model": "gable",
+    "young_modulus_pa": 30000000000.0,
+    "poisson_ratio": 0.2,
+    "density_kg_m3": 2500,
+    "gravity_m_s2": 9.81
+  }
+}

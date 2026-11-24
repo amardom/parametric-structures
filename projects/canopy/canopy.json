@@ -1,0 +1,25 @@
+{
+  "geometry": {
+    "bolts": 4,
+    "edge_distance_m": 0.105,
+    "anchor_diameter_m": 0.016,
+    "embedment_m": 0.115,
+    "wall_thickness_m": 0.28,
+    "plate_width_m": 0.20,
+    "plate_height_m": 0.16,
+    "plate_thickness_m": 0.014,
+    "bolt_half_span_m": 0.066,
+    "bolt_half_height_m": 0.049,
+    "canopy_width_m": 2.60,
+    "canopy_depth_m": 1.25
+  },
+  "loads": {"tie_force_kn": 20.0, "tie_angle_deg": 45.0},
+  "mesh": {"element_size_m": 0.05, "bolt_size_m": 0.01},
+  "structural_model": {
+    "model": "canopy_anchor",
+    "concrete_young_modulus_pa": 30000000000,
+    "concrete_poisson_ratio": 0.2,
+    "steel_young_modulus_pa": 210000000000,
+    "steel_poisson_ratio": 0.3
+  }
+}

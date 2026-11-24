@@ -1,0 +1,30 @@
+{
+  "geometry": {
+    "diameter_m": 5.0,
+    "wall_height_m": 2.4,
+    "wall_thickness_m": 0.2,
+    "opening_width_m": 1.1,
+    "opening_end_deg": 110,
+    "door_width_m": 0.9,
+    "door_height_m": 2.05,
+    "glass_thickness_m": 0.012,
+    "rib_diameter_m": 0.06,
+    "ring_diameter_m": 0.12,
+    "interior_arches": 12,
+    "transverse_arches": 14,
+    "rib_wall_m": 0.003,
+    "ring_wall_m": 0.005
+  },
+  "mesh": {
+    "element_size_m": 0.25
+  },
+  "structural_model": {
+    "model": "observatory",
+    "young_modulus_pa": 30000000000,
+    "poisson_ratio": 0.2,
+    "density_kg_m3": 2500,
+    "steel_density_kg_m3": 7850,
+    "glass_density_kg_m3": 2500,
+    "gravity_m_s2": 9.81
+  }
+}

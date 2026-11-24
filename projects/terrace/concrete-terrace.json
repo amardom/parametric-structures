@@ -1,0 +1,14 @@
+{
+  "geometry": {"radius_m": 3.5, "slab_thickness_m": 0.24},
+  "reinforcement": {"top_area_mm2_per_m": 1400, "top_axis_depth_m": 0.045, "young_modulus_pa": 200000000000},
+  "mesh": {"element_size_m": 0.16},
+  "loads": {"surface_pressure_pa": 4000},
+  "structural_model": {
+    "model": "concrete_terrace",
+    "young_modulus_pa": 30000000000,
+    "tensile_strength_pa": 2900000,
+    "poisson_ratio": 0.2,
+    "density_kg_m3": 2500,
+    "gravity_m_s2": 9.81
+  }
+}

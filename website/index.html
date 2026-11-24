@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parametric Structures · Concrete Shelter</title>
+  <link rel="stylesheet" href="style.css?v=methodology-spacing">
+  <script defer src="cases.js?v=shelter-window"></script>
+  <script defer src="gable-cases.js?v=projection"></script>
+  <script defer src="observatory-cases.js?v=5"></script>
+  <script defer src="house-cases.js"></script>
+  <script defer src="canopy-cases.js"></script>
+  <script defer src="hypar-cases.js?v=hypar-door"></script>
+  <script defer src="bridge-cases.js?v=hanger-loss"></script>
+  <script defer src="extension-cases.js"></script>
+  <script defer src="depth-renderer.js"></script>
+  <script defer src="extension-details.js"></script>
+  <script defer src="brutalist-cases.js?v=core-accesses"></script>
+  <script defer src="terrace-cases.js?v=balcony"></script>
+  <script defer src="atrium-cases.js?v=guardrails"></script>
+  <script defer src="cabin-cases.js?v=1"></script>
+  <script defer src="viewer.js?v=thermal-saturated"></script>
+</head>
+<body>
+  <aside>
+    <a class="wordmark" href="#shelter">Parametric<br>Structures</a>
+    <nav aria-label="Cases">
+      <p class="sidebar-heading">Projects</p>
+      <a href="#shelter" aria-current="location">Concrete Shelter</a>
+      <a href="#gable">Gable Frame</a>
+      <a href="#observatory">Observatory</a>
+      <a href="#house">Glass House</a>
+      <a href="#canopy">Canopy</a>
+      <a href="#hypar">Steel Hypar</a>
+      <a href="#bridge">Concrete Arch Bridge</a>
+      <a href="#extension">Roof Extension</a>
+      <a href="#brutalist">Brutalist Housing Block</a>
+      <a href="#terrace">Concrete Balcony</a>
+      <a href="#atrium">Atrium Walkway</a>
+      <a href="#cabin">Thermal Cabin</a>
+    </nav>
+    <section class="sidebar-methodology" aria-labelledby="methodology-heading">
+      <h2 class="sidebar-heading" id="methodology-heading">Methodology</h2>
+      <p>Finite element analyses are performed in <a href="https://github.com/ElmerCSC/elmerfem">Elmer</a>, with custom elements using <a href="https://gcc.gnu.org/onlinedocs/gfortran/Fortran-2003-status.html">Fortran 2003</a> syntax.</p>
+      <p>Beams and hangers are modelled with 1D elements, slabs and walls with shells, and local details with 3D solids.</p>
+      <p>Structural optimisation is performed in Python using <a href="https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html">SciPy SLSQP</a>, with constraints evaluated in <a href="https://github.com/ElmerCSC/elmerfem">Elmer</a>.</p>
+    </section>
+  </aside>
+  <main>
+    <h1>Concrete Shelter</h1>
+    <p class="subtitle">
+      <span id="case-subtitle">Self-weight · Elastic concrete · Fixed bases</span>
+      <span id="case-question">How does widening or shifting the rear window change the way the roof is supported?</span>
+    </p>
+
+    <div class="parameters" aria-label="Case parameters">
+      <label><span id="width-label">Width</span>
+        <select id="width"><option value="12">12 m</option><option value="15" selected>15 m</option></select>
+      </label>
+      <label id="option-control"><span id="option-label">Roof slab thickness</span>
+        <select id="thickness"><option value="30" selected>30 cm</option><option value="40">40 cm</option></select>
+      </label>
+      <label hidden><span id="third-parameter-label">Transverse arches</span>
+        <select id="third-parameter"></select>
+      </label>
+      <label hidden>Study
+        <select id="extension-study">
+          <option value="global">Global load transfer</option>
+          <option value="plain">Column seat · No stiffeners</option>
+          <option value="stiffened">Column seat · Paired stiffeners</option>
+        </select>
+      </label>
+      <label hidden>Load case
+        <select id="gable-load">
+          <option value="gravity">Self-weight</option>
+          <option value="wind" selected>Self-weight + corner uplift</option>
+        </select>
+      </label>
+      <label hidden>Hanger condition
+        <select id="bridge-condition">
+          <option value="intact">All hangers active</option>
+          <option value="loss">One midspan hanger absent</option>
+        </select>
+      </label>
+      <label id="hypar-load-control" hidden>Load case
+        <select id="hypar-load">
+          <option value="wind">Self-weight + asymmetric uplift</option>
+          <option value="gravity">Self-weight</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="viewer-header" aria-label="Model view">
+      <button id="plans" type="button" aria-pressed="true">Drawings</button>
+      <button id="cad" type="button" aria-pressed="false">STEP Geometry</button>
+      <button id="result" type="button" aria-pressed="false">FE Deformed Shape</button>
+    </div>
+    <section id="plan-view" aria-label="Project drawings">
+      <div class="plan-controls" aria-label="Drawing type">
+        <button type="button" data-drawing="plan" aria-pressed="true">Plan</button>
+        <button type="button" data-drawing="elevation" aria-pressed="false">Elevation</button>
+        <button type="button" data-drawing="section" aria-pressed="false">Section</button>
+        <button type="button" data-drawing="comparison" aria-pressed="false" hidden>Load Transfer Study</button>
+      </div>
+      <p id="plan-missing" role="status" hidden>Generate drawings with <code>.venv/bin/python website/build_data.py --plans-only</code>.</p>
+      <a id="plan-link" target="_blank" rel="noopener" aria-label="Open full-size drawing">
+        <img id="plan-sheet" alt="">
+      </a>
+    </section>
+    <section class="viewer" aria-label="3D view" hidden>
+      <canvas id="viewport" tabindex="0" aria-label="3D model. Drag or use the arrow keys to rotate. Scroll or use plus and minus to zoom."></canvas>
+      <div class="camera-controls" aria-label="3D view controls">
+        <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+        <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+        <button id="reset" type="button">Reset view</button>
+      </div>
+    </section>
+    <div id="cabin-controls" class="housing-optimization" hidden>
+      <label>View <select id="cabin-field">
+        <option value="solar">Solar exposure</option>
+        <option value="surface">Inside surface temperature</option>
+      </select></label>
+      <p><label>Hour <input id="cabin-hour" type="range" min="0" max="72" value="40" style="width:min(360px,70%)"></label>
+        <output id="cabin-time" for="cabin-hour"></output></p>
+      <p id="cabin-reading"></p>
+      <p id="cabin-scale" class="cabin-scale">
+        <span id="cabin-scale-min"></span><i aria-hidden="true"></i><span id="cabin-scale-max"></span>
+      </p>
+    </div>
+    <div id="atrium-controls" class="housing-optimization" hidden>
+      <label>Frequency to view <select id="atrium-frequency"></select></label>
+      <button id="atrium-animation" type="button" aria-pressed="false">Play vibration</button>
+      <p id="atrium-amplitude" aria-live="polite"></p>
+    </div>
+    <div class="caption" hidden>
+      <span id="legend" hidden><span id="legend-label">Actual vertical deflection</span> <i></i> <span id="scale-start">0</span> to <span id="scale-end"></span> mm · Deformation scale ×<span id="warp-factor">80</span></span>
+    </div>
+    <div id="connection-caption" class="caption" hidden>
+      <span class="compression-swatch" aria-hidden="true"></span> <span id="connection-scale"></span>
+    </div>
+    <p class="result" aria-live="polite" id="readout"></p>
+    <p id="connection-assumptions" class="result" hidden></p>
+    <p class="result" id="hanger-loss-readout" hidden></p>
+    <p class="result" id="gable-reactions" hidden></p>
+    <p class="result" id="shelter-reactions" hidden></p>
+    <p class="result" id="material-masses" hidden></p>
+    <section id="cabin-response" class="housing-optimization" aria-labelledby="cabin-response-heading" hidden>
+      <h2 id="cabin-response-heading">Indoor air temperature over three hot days</h2>
+      <svg id="cabin-chart" viewBox="0 0 720 305" width="720" height="305" role="img"
+           aria-label="Indoor and outdoor temperature over three design days"
+           style="width:100%;max-width:720px;height:auto;display:block"></svg>
+      <p>Illustrative clear-sky summer days at Lausanne latitude. Times are local solar time. The cabin has no active cooling and uses a fixed ventilation rate of 0.55 air changes per hour.</p>
+      <p>Elmer solves transient one-dimensional conduction through the envelope coupled to a well-mixed indoor-air node. The 3D view colours each face by a single value. Solar exposure shows incident irradiance before shading, while the solar gain readout includes the glazing and louvres.</p>
+    </section>
+    <section id="atrium-response" class="housing-optimization" aria-labelledby="atrium-response-heading" hidden>
+      <h2 id="atrium-response-heading">Vertical acceleration at the outer walking edge</h2>
+      <svg id="atrium-chart" viewBox="0 0 700 305" width="700" height="305" role="img"
+           aria-label="Steady-state acceleration amplitude versus forcing frequency"
+           style="width:100%;max-width:700px;height:auto;display:block"></svg>
+      <p>Elmer solves for the steady-state response to a fixed 180 N sinusoidal footfall patch. The deck ends are fixed and the hanger is a vertical spring with axial stiffness EA/L. The glass and steel guardrails add distributed mass to the deck. The landings and hanger terminals provide visual context. Deck Rayleigh damping is calibrated to 2% at 2 and 12 Hz.</p>
+      <p>The animation shows one cycle slowed down, with exaggerated movement. Blue is upward and ochre is downward. This comparison uses an illustrative load and damping.</p>
+    </section>
+    <section id="terrace-cracking" class="housing-optimization" aria-labelledby="terrace-cracking-heading" hidden>
+      <h2 id="terrace-cracking-heading">Where does the slab start to crack?</h2>
+      <img id="terrace-cracking-map" style="display:block;width:100%;max-width:560px;height:auto" width="560" height="211"
+           alt="Plan showing the estimated zone of top-face cracking along the fixed edge.">
+      <p>Slab self-weight, railing weight along the curved edge and a uniform 4 kPa study load. Cantilever strips estimate where the cracking moment is exceeded. Elmer shell elements use a local effective modulus based on the top reinforcement. The same first-cracking criterion applies to both layouts.</p>
+      <p>The support is fixed. The railing contributes weight only. Reinforcement is represented through section stiffness. This study covers short-term deflection under the illustrated load.</p>
+    </section>
+    <section id="wall-reactions" class="wall-reactions" aria-label="Wall reaction split" hidden>
+      <div class="wall-reaction-labels"><span id="left-wall-reaction"></span><span id="right-wall-reaction"></span></div>
+      <div class="wall-reaction-bar" aria-hidden="true"><span></span></div>
+    </section>
+    <section id="housing-optimization" class="housing-optimization" aria-labelledby="housing-objective" hidden>
+      <h2 id="housing-objective">Concrete volume optimisation</h2>
+      <p id="housing-summary"></p>
+      <ul class="housing-inputs">
+        <li><strong>Variables.</strong> Each height band shares two design variables across all its storeys: core wall thickness and shear wall thickness.</li>
+        <li><strong>Fixed inputs.</strong> <span id="housing-storeys"></span> storeys, <span id="housing-slab"></span> mm slabs, fixed base, self-weight and <span id="housing-wind"></span> illustrative wind.</li>
+        <li><strong>Constraints.</strong> Wall thicknesses of <span id="housing-bounds"></span> and interstorey drift of at most <span id="housing-limit"></span>.</li>
+      </ul>
+      <div class="housing-equations">
+        <p><strong>Minimise</strong> V(t) = V<sub>slabs</sub> + Σ<sub>j=1…6</sub> A<sub>j</sub>t<sub>j</sub></p>
+        <p><strong>Check drift</strong> max<sub>i</sub> |u<sub>i</sub>(t) − u<sub>i−1</sub>(t)| / h<sub>i</sub> ≤ <span id="housing-equation-limit"></span></p>
+        <p>A<sub>j</sub> is the wall centreline area. u<sub>i</sub> is the floor-average lateral displacement from <a href="https://github.com/ElmerCSC/elmerfem">Elmer</a>. h<sub>i</sub> is the storey height.</p>
+      </div>
+      <table id="housing-thicknesses">
+        <caption>Uniform → optimised wall thicknesses (mm)</caption>
+        <thead><tr><th scope="col">Band</th><th scope="col">Storeys</th><th scope="col">Core</th><th scope="col">Shear walls</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="result"><span id="housing-governing"></span> <a href="https://github.com/ElmerCSC/elmerfem">Elmer</a> evaluations</p>
+    </section>
+    <table id="bolt-forces" hidden>
+      <caption>Anchor bolt forces at the concrete face</caption>
+      <thead><tr><th scope="col">Bolt position</th><th scope="col">Axial force (kN)</th><th scope="col">Shear force (kN)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </main>
+</body>
+</html>

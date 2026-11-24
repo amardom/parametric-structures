@@ -1,0 +1,27 @@
+{
+  "geometry": {
+    "span_m": 24,
+    "deck_width_m": 7.2,
+    "deck_thickness_m": 0.55,
+    "arch_rise_m": 5.4,
+    "arch_depth_m": 0.8,
+    "arch_width_m": 0.55,
+    "abutment_height_m": 2.8,
+    "abutment_thickness_m": 1.0
+  },
+  "hangers": {
+    "count_per_side": 9,
+    "diameter_mm": 40,
+    "young_modulus_pa": 200000000000,
+    "density_kg_m3": 7850
+  },
+  "loads": {"deck_pressure_pa": 5000},
+  "mesh": {"element_size_m": 0.35},
+  "structural_model": {
+    "model": "concrete_arch_bridge",
+    "young_modulus_pa": 33000000000,
+    "poisson_ratio": 0.2,
+    "density_kg_m3": 2500,
+    "gravity_m_s2": 9.81
+  }
+}

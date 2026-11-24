@@ -1,0 +1,27 @@
+{
+  "geometry": {
+    "width_m": 15.0,
+    "depth_m": 5.0,
+    "clear_height_m": 3.0,
+    "wall_thickness_m": 0.25,
+    "roof_thickness_m": 0.3,
+    "rear_window": {
+      "width_m": 4.8,
+      "offset_m": 0.0,
+      "sill_height_m": 2.45
+    }
+  },
+  "mesh": {
+    "element_size_m": 0.15
+  },
+  "structural_model": {
+    "young_modulus_pa": 30000000000.0,
+    "poisson_ratio": 0.2,
+    "density_kg_m3": 2500,
+    "gravity_m_s2": 9.81,
+    "model": "shell"
+  },
+  "loads": {
+    "roof_pressure_pa": 0.0
+  }
+}

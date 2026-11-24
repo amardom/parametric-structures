@@ -1,0 +1,8 @@
+{
+  "geometry": {"side_m": 5, "height_m": 2.8, "concrete_m": 0.18, "insulation_m": 0.16},
+  "windows": {"main_facade": "south", "main_width_m": 2.6, "main_height_m": 1.6, "north_width_m": 1.25, "north_height_m": 1.15, "solar_factor": 0.55, "u_value_w_m2k": 1.3, "shaded": false},
+  "weather": {"latitude_deg": 46.52, "day_of_year": 205, "outdoor_min_c": 20, "outdoor_max_c": 34, "ground_c": 22},
+  "use": {"air_changes_per_hour": 0.55, "internal_gains_w": 110},
+  "mesh": {"element_size_m": 0.03},
+  "structural_model": {"model": "thermal_cabin"}
+}

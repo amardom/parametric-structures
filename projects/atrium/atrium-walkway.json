@@ -1,0 +1,14 @@
+{
+  "geometry": {"radius_m": 14.0, "angle_deg": 68.0, "width_m": 2.2, "deck_depth_m": 0.18},
+  "hanger": {"station": 0.5, "diameter_m": 0.016, "length_m": 5.5, "young_modulus_pa": 200000000000},
+  "mesh": {"element_size_m": 0.55, "width_cells": 4, "depth_cells": 1},
+  "loads": {"footfall_amplitude_n": 180.0},
+  "frequency": {"start_hz": 1.0, "end_hz": 16.0, "step_hz": 0.25},
+  "structural_model": {
+    "model": "atrium_walkway",
+    "young_modulus_pa": 30000000000,
+    "poisson_ratio": 0.2,
+    "density_kg_m3": 2500,
+    "damping_ratio": 0.02
+  }
+}

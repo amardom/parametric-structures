@@ -1,0 +1,30 @@
+{
+  "geometry": {
+    "span_m": 6,
+    "column_offset_m": 1.5,
+    "beam_depth_m": 0.45,
+    "flange_width_m": 0.24,
+    "flange_thickness_m": 0.022,
+    "web_thickness_m": 0.012,
+    "wall_height_m": 2.8,
+    "wall_thickness_m": 0.25,
+    "wall_effective_width_m": 1.0,
+    "column_side_m": 0.24,
+    "storey_height_m": 2.8
+  },
+  "connection": {
+    "bearing_plate_thickness_m": 0.02,
+    "stiffener_thickness_m": 0.012,
+    "mesh_size_m": 0.018
+  },
+  "loads": {"column_force_kn": 180},
+  "mesh": {"element_size_m": 0.075},
+  "structural_model": {
+    "model": "roof_extension",
+    "young_modulus_pa": 210000000000,
+    "poisson_ratio": 0.30,
+    "density_kg_m3": 7850,
+    "wall_modulus_pa": 3500000000,
+    "gravity_m_s2": 9.81
+  }
+}

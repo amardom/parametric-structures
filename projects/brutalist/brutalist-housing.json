@@ -1,0 +1,19 @@
+{
+  "geometry": {
+    "storeys": 10,
+    "storey_height_m": 3.0,
+    "slab_thickness_m": 0.24,
+    "baseline_thickness_m": 0.40,
+    "minimum_thickness_m": 0.18,
+    "maximum_thickness_m": 0.55
+  },
+  "mesh": {"element_size_m": 2.0},
+  "loads": {"wind_pressure_pa": 1800, "drift_limit": 0.00020},
+  "structural_model": {
+    "model": "brutalist_housing",
+    "young_modulus_pa": 30000000000,
+    "poisson_ratio": 0.2,
+    "density_kg_m3": 2500,
+    "gravity_m_s2": 9.81
+  }
+}
