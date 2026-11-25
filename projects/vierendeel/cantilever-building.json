@@ -1,0 +1,16 @@
+{
+  "structural_model": {
+    "model": "vierendeel_cantilever"
+  },
+  "bay_width_m": 4,
+  "joint": "flexible",
+  "length_m": 12,
+  "width_m": 7,
+  "storey_height_m": 3.2,
+  "bay_widths_m": [3, 4],
+  "steel_modulus_pa": 210000000000,
+  "steel_shear_modulus_pa": 81000000000,
+  "joint_stiffness_nm_rad": 90000000,
+  "floor_pressure_pa": [5000, 5000, 2500],
+  "near_side_load_fraction": 0.70
+}

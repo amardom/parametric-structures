@@ -15,6 +15,75 @@ const tabs = ["plans", "cad", "result"].map((id) => document.getElementById(id))
 const format = new Intl.NumberFormat("en-GB", { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const openingFormat = new Intl.NumberFormat("en-GB", { useGrouping: false, minimumFractionDigits: 3, maximumFractionDigits: 3 });
 const projects = {
+  slab: {
+    planFolder: "slab",
+    title: "Slab–Column Opening",
+    labels: ["Service opening"],
+    options: [[["none", "No opening"], ["near", "Near column"], ["far", "300 mm farther"]]],
+    selected: ["near"],
+    cases: window.slabCases,
+    subtitle: "Concrete flat slab · Local 3D solid FEM · 300 kN load",
+    question: "How does moving the service opening change the shear around the column?",
+    center: [0, -.24],
+    centerX: .05,
+    span: 3.2,
+    viewHeight: 3.65,
+    azimuth: .65,
+    elevation: .33,
+  },
+  vierendeel: {
+    planFolder: "vierendeel",
+    title: "Vierendeel Cantilever",
+    labels: ["Facade bay", "Post-to-chord joints"],
+    options: [[[3, "3 m"], [4, "4 m"]],
+              [["rigid", "Rigid"], ["flexible", "Semi-rigid"]]],
+    selected: ["4", "flexible"],
+    cases: window.vierendeelCases,
+    subtitle: "Two steel facade frames · 12 m cantilever · Asymmetric floor loads",
+    question: "How much does the window opening rack if the facade bays get wider?",
+    center: [3.4, 1.7],
+    centerX: 4.5,
+    span: 17,
+    viewHeight: 14.7,
+    azimuth: .32,
+    elevation: .32,
+  },
+  auditorium: {
+    planFolder: "auditorium",
+    title: "Folded Auditorium",
+    labels: ["Ceiling profile", "Acoustic treatment", "Listening position"],
+    options: [[["flat", "Flat"], ["folded", "Folded"]],
+              [["reflective", "Hard surfaces"], ["absorptive", "Absorptive ceiling + rear wall"]],
+              [["front", "Front rows"], ["middle", "Middle rows"], ["back", "Back rows"]]],
+    selected: ["folded", "reflective", "middle"],
+    cases: window.auditoriumCases,
+    subtitle: "Speech · First reflections · Illustrative sound playback",
+    question: "How do ceiling shape and absorption change what you hear at each seat?",
+    center: [4.5, 2.5],
+    centerX: 8.5,
+    span: 19,
+    viewHeight: 11,
+    azimuth: -.26,
+    elevation: .22,
+  },
+  facade: {
+    planFolder: "facade",
+    title: "Historic Facade",
+    labels: ["Gallery width", "Construction stage"],
+    options: [[[4, "4 m"], [7, "7 m"]],
+              [["existing", "Existing"], ["underpinning", "Temporary supports"],
+               ["excavation", "Excavation"], ["permanent", "Permanent structure"]]],
+    selected: ["7", "excavation"],
+    cases: window.facadeCases,
+    subtitle: "Historic masonry · Underbuild sequence · Beam and spring FEM",
+    question: "When does the facade move as the gallery is excavated below?",
+    center: [0.7, .9],
+    centerX: 7,
+    span: 16,
+    viewHeight: 10,
+    azimuth: .34,
+    elevation: .24,
+  },
   cabin: {
     planFolder: "cabin",
     title: "Thermal Cabin",
@@ -224,6 +293,19 @@ const housingOptimization = document.querySelector("#housing-optimization");
 const shelter = projects.shelter;
 const terrace = projects.terrace;
 const cabin = projects.cabin;
+const facade = projects.facade;
+const slab = projects.slab;
+const slabResponse = document.querySelector("#slab-response");
+const vierendeel = projects.vierendeel;
+const vierendeelResponse = document.querySelector("#vierendeel-response");
+const auditorium = projects.auditorium;
+const auditoriumResponse = document.querySelector("#auditorium-response");
+const auditoriumPlay = document.querySelector("#auditorium-play");
+const auditoriumCompare = document.querySelector("#auditorium-compare");
+const auditoriumAudioStatus = document.querySelector("#auditorium-audio-status");
+let auditoriumAudio, auditoriumActiveButton;
+let auditoriumPlayback = 0;
+const facadeResponse = document.querySelector("#facade-response");
 const cabinControls = document.querySelector("#cabin-controls");
 const cabinResponse = document.querySelector("#cabin-response");
 const cabinHour = document.querySelector("#cabin-hour");
@@ -262,7 +344,7 @@ const houseRenderMeshes = new WeakMap();
 const sweep = window.observatoryCases;
 let project;
 let colorLimit;
-const solidColors = { hyparDoor: [77, 83, 79], hyparFrame: [35, 37, 37], housingGlass: [71, 81, 81], emblem: [149, 58, 39], emblemHammer: [166, 65, 43], emblemBacking: [177, 172, 159], timber: [192, 158, 117], wall: [177, 172, 159], roof: [213, 209, 195], glass: [115, 174, 181], steel: [68, 85, 88], column: [176, 153, 133], door: [64, 125, 138], anchor: [159, 88, 65] };
+const solidColors = { audPanel: [105, 165, 151], slabPlinth: [177, 164, 143], slabDuct: [82, 119, 136], slabOpening: [47, 103, 151], slabConcrete: [200, 192, 171], vierCore: [172, 163, 143], vierGround: [218, 216, 204], vierSteel: [62, 82, 83], vierDeck: [196, 193, 177], vierFloor: [116, 127, 123], vierWindow: [214, 113, 39], audSeat: [74, 115, 110], audDirect: [24, 162, 126], audCeiling: [241, 136, 59], audRear: [157, 101, 208], audOther: [138, 147, 151], facadeStone: [216, 195, 164], facadeGlass: [77, 97, 104], facadeFooting: [157, 166, 165], facadeSoil: [164, 134, 105], facadeProp: [138, 80, 57], facadeGaugeA: [37, 100, 180], facadeGaugeB: [188, 47, 44], hyparDoor: [77, 83, 79], hyparFrame: [35, 37, 37], housingGlass: [71, 81, 81], emblem: [149, 58, 39], emblemHammer: [166, 65, 43], emblemBacking: [177, 172, 159], timber: [192, 158, 117], wall: [177, 172, 159], roof: [213, 209, 195], glass: [115, 174, 181], steel: [68, 85, 88], column: [176, 153, 133], door: [64, 125, 138], anchor: [159, 88, 65] };
 const colorRamp = [[211, 225, 220], [65, 119, 131], [203, 126, 73]];
 const initialCamera = { azimuth: 0.40, elevation: 0.42, zoom: 1 };
 
@@ -314,6 +396,11 @@ function selectVariant() {
   const variant = project.cases?.[key];
   const showingPlans = mode === "plans";
   stopAtriumAnimation();
+  stopAuditoriumAudio();
+  slabResponse.hidden = project !== slab || mode !== "result" || !variant;
+  vierendeelResponse.hidden = project !== vierendeel || mode !== "result" || !variant;
+  auditoriumResponse.hidden = project !== auditorium || mode !== "result" || !variant;
+  facadeResponse.hidden = project !== facade || mode !== "result" || !variant;
   cabinResponse.hidden = project !== cabin || mode !== "result" || !variant;
   cabinControls.hidden = cabinResponse.hidden;
   atriumResponse.hidden = project !== atrium || mode !== "result" || !variant;
@@ -339,7 +426,8 @@ function selectVariant() {
   gableReactions.hidden = project !== gable || mode !== "result" || !variant;
   hyparLoad.closest("label").hidden = project !== hypar || mode !== "result" || !variant;
   tabs.forEach((tab) => tab.setAttribute("aria-pressed", String(tab.id === mode)));
-  document.querySelector("#result").textContent = project === atrium ? "Harmonic Response" : project === cabin ? "Thermal Response" : "FE Deformed Shape";
+  document.querySelector("#cad").textContent = project === slab ? "Solid Geometry" : project === vierendeel ? "Frame Geometry" : project === facade || project === auditorium ? "Section Geometry" : "STEP Geometry";
+  document.querySelector("#result").textContent = project === slab ? "Shear Transfer" : project === auditorium ? "Acoustic Response" : project === facade ? "Stage Response" : project === atrium ? "Harmonic Response" : project === cabin ? "Thermal Response" : "FE Deformed Shape";
   planView.hidden = !showingPlans;
   view3d.hidden = showingPlans || !variant;
   caption.hidden = mode !== "result" || !variant || Boolean(connection);
@@ -365,6 +453,83 @@ function selectVariant() {
   }
   if (!variant) {
     readout.textContent = "Generate viewer data with .venv/bin/python website/build_data.py";
+    return;
+  }
+  if (project === slab) {
+    caption.hidden = true;
+    parts = mode === "result" ? variant.result.parts : variant.cad;
+    if (mode === "result") {
+      const result = variant.result;
+      readout.textContent = "Column reaction " + format.format(result.reaction_kn)
+        + " kN · Vertical shear crossing the cut " + format.format(result.shear_kn) + " kN";
+      const labels = ["West", "East · Opening side", "South", "North"];
+      const baseline = slab.cases.none.result.shares;
+      document.querySelector("#slab-shares").replaceChildren(...result.shares.map((share, i) => {
+        const row = document.createElement("tr");
+        const heading = document.createElement("th");
+        heading.scope = "row";
+        heading.textContent = labels[i];
+        row.append(heading);
+        const delta = share - baseline[i];
+        row.insertCell().textContent = format.format(share) + "%"
+          + (Math.abs(delta) >= .05 ? " (" + (delta < 0 ? "−" : "+") + format.format(Math.abs(delta)) + " pp)" : "");
+        return row;
+      }));
+    }
+    requestFrame();
+    return;
+  }
+  if (project === vierendeel) {
+    caption.hidden = true;
+    parts = mode === "result" ? variant.result.parts : variant.cad;
+    if (mode === "result") showVierendeel(variant.result);
+    requestFrame();
+    return;
+  }
+  if (project === auditorium) {
+    caption.hidden = true;
+    parts = mode === "result" ? [...variant.cad, ...variant.result.parts] : variant.cad;
+    if (mode === "result") {
+      const result = variant.result;
+      const rear = result.paths.find(path => path.kind === "rear wall");
+      const direct = result.paths[0];
+      const ceiling = result.paths.filter(path => path.kind === "ceiling");
+      document.querySelector("#auditorium-ceiling").textContent = ceiling.length
+        ? "First ceiling reflection +" + Math.round(ceiling[0].delay_ms) + " ms after direct sound."
+        : "No first-order ceiling reflection reaches this seat.";
+      resetAuditoriumButtons();
+      readout.textContent = "Estimated mid-band reverberation " + format.format(result.rt60_s) + " s"
+        + (rear ? " · Rear reflection +" + Math.round(rear.delay_ms) + " ms" : "");
+      document.querySelector("#auditorium-rear").textContent = rear
+        ? "Rear-wall reflection " + Math.round(20 * Math.log10(rear.gain / direct.gain))
+          + " dB relative to the direct sound."
+        : "The centreline model found no first-order rear-wall reflection at this seat.";
+      document.querySelector("#auditorium-section").src = "plans/auditorium/" + key + "-section.svg";
+    }
+    requestFrame();
+    return;
+  }
+  if (project === facade) {
+    caption.hidden = true;
+    parts = mode === "result" ? variant.result.parts : variant.cad;
+    if (mode === "result") {
+      const result = variant.result;
+      readout.textContent = "Differential settlement A–B · " + format.format(result.difference_mm)
+        + " mm · A " + format.format(result.a_mm) + " mm · B " + format.format(result.b_mm) + " mm";
+      document.querySelector("#facade-stage-note").textContent = result.note;
+      const rows = result.history.map((entry, index) => {
+        const row = document.createElement("tr");
+        const heading = document.createElement("th");
+        heading.scope = "row";
+        heading.textContent = facade.options[1][index][1];
+        if (facade.options[1][index][0] === thickness.value) row.setAttribute("aria-current", "step");
+        row.append(heading);
+        row.insertCell().textContent = format.format(entry.difference_mm) + " mm";
+        return row;
+      });
+      document.querySelector("#facade-history").replaceChildren(...rows);
+    }
+    requestFrame();
     return;
   }
   if (project === cabin) {
@@ -520,6 +685,86 @@ function selectVariant() {
   }
   requestFrame();
 }
+
+function showVierendeel(result) {
+  const [near, far] = result.tip_mm;
+  const [a, b] = result.diagonal_changes_mm;
+  const signed = value => (value >= 0 ? "+" : "−") + format.format(Math.abs(value)) + " mm";
+  readout.textContent = "Tip deflection ↓ " + format.format(near) + " mm near side · "
+    + format.format(far) + " mm far side";
+  document.querySelector("#vierendeel-diagonals").textContent =
+    "Diagonal change · A " + signed(a) + " · B " + signed(b);
+  const points = result.window_initial;
+  const deformed = points.map(([x, z], i) => [
+    x + 60 * result.window_displacement[i][0], z + 60 * result.window_displacement[i][1],
+  ]);
+  const onScreen = ([x,z]) => [76 + 62 * x, 257 - 62 * z];
+  const polygon = positions => positions.map(point => onScreen(point).join(",")).join(" ");
+  const diagonals = [[0,2],[1,3]].map(([start,end],i) => {
+    const [x1,y1] = onScreen(deformed[start]);
+    const [x2,y2] = onScreen(deformed[end]);
+    return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2
+      + '" stroke="#a35222"/><text x="' + (x2 + (i ? -22 : 9)) + '" y="' + (y2 - 6)
+      + '" font-family="Arial" font-size="15" fill="#7c481f">' + (i ? "B" : "A") + "</text>";
+  }).join("");
+  document.querySelector("#vierendeel-window").innerHTML =
+    '<rect width="510" height="310" fill="#f0efe8"/><polygon points="' + polygon(deformed)
+    + '" fill="#f5dfbf" stroke="#a35222" stroke-width="2"/><polygon points="' + polygon(points)
+    + '" fill="none" stroke="#666e71" stroke-width="2" stroke-dasharray="6 4"/>' + diagonals;
+}
+
+function resetAuditoriumButtons() {
+  for (const button of [auditoriumPlay, auditoriumCompare]) {
+    if (!button.dataset.wall) continue;
+    button.textContent = button.dataset.wall === "reflective" ? "Play hard room" : "Play treated room";
+    button.setAttribute("aria-pressed", "false");
+  }
+}
+
+function stopAuditoriumAudio() {
+  auditoriumPlayback++;
+  auditoriumAudio?.pause();
+  auditoriumAudio = undefined;
+  auditoriumActiveButton = undefined;
+  resetAuditoriumButtons();
+  auditoriumAudioStatus.textContent = "";
+}
+
+async function playAuditorium(button) {
+  const alreadyPlaying = auditoriumActiveButton === button;
+  stopAuditoriumAudio();
+  if (alreadyPlaying) return;
+  if (thickness.value !== button.dataset.wall) {
+    thickness.value = button.dataset.wall;
+    selectVariant();
+  }
+  const playback = auditoriumPlayback;
+  const [roof, , seat] = project.selected;
+  const variant = auditorium.cases[[roof, button.dataset.wall, seat].join("-")];
+  const clip = variant?.result.audio_mp3;
+  if (!clip) {
+    auditoriumAudioStatus.textContent = "Audio data is missing. Rebuild the auditorium web assets.";
+    return;
+  }
+  const audio = new Audio("data:audio/mpeg;base64," + clip);
+  auditoriumAudio = audio;
+  auditoriumActiveButton = button;
+  button.textContent = "Stop";
+  button.setAttribute("aria-pressed", "true");
+  audio.addEventListener("ended", () => {
+    if (playback === auditoriumPlayback) stopAuditoriumAudio();
+  }, { once: true });
+  try {
+    await audio.play();
+  } catch {
+    if (playback !== auditoriumPlayback) return;
+    stopAuditoriumAudio();
+    auditoriumAudioStatus.textContent = "Playback failed in this browser. Try again or open the local site in Chromium.";
+  }
+}
+
+auditoriumPlay.addEventListener("click", () => playAuditorium(auditoriumPlay));
+auditoriumCompare.addEventListener("click", () => playAuditorium(auditoriumCompare));
 
 function cabinTime(hour) {
   const day = Math.min(3, Math.floor(hour / 24) + 1);
@@ -1351,7 +1596,7 @@ function render() {
   const ce = Math.cos(elevation), se = Math.sin(elevation);
   const detail = project === canopy && mode === "result";
   const connection = project === extension && mode === "result" && extensionDetails?.cases[extensionStudy.value];
-  const compressionLimit = connection ? extensionDetailLimit() : 1;
+  const compressionLimit = connection ? extensionDetailLimit() : project === slab ? .5 : 1;
   const span = detail ? 0.68 : (project.span ?? Number(width.value));
   const scale = project === brutalist ? Math.min(w / 27, h / (window.brutalistCases.storey_height_m * Number(width.value) + 5)) * zoom
     : connection ? Math.min(w / 1.50, h / 0.85) * zoom
@@ -1409,7 +1654,7 @@ function render() {
   }
 
   polygons.sort((a, b) => a.depth - b.depth);
-  if ((mode === "cad" || project === shelter || project === gable || project === house || project === hypar || project === bridge || project === extension || project === brutalist || project === terrace || project === atrium || project === cabin) && renderDepth?.(polygons, context, w, h)) return;
+  if ((mode === "cad" || project === shelter || project === gable || project === house || project === hypar || project === bridge || project === extension || project === brutalist || project === terrace || project === atrium || project === cabin || project === facade || project === auditorium || project === vierendeel || project === slab) && renderDepth?.(polygons, context, w, h)) return;
 
   for (const { corners, color, opacity = 1, lineWidth } of polygons) {
     const paint = "rgb(" + color.join(",") + ")";

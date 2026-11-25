@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Parametric Structures · Concrete Shelter</title>
-  <link rel="stylesheet" href="style.css?v=methodology-spacing">
+  <link rel="stylesheet" href="style.css?v=auditorium-audio">
   <script defer src="cases.js?v=shelter-window"></script>
   <script defer src="gable-cases.js?v=projection"></script>
   <script defer src="observatory-cases.js?v=5"></script>
@@ -19,7 +19,11 @@
   <script defer src="terrace-cases.js?v=balcony"></script>
   <script defer src="atrium-cases.js?v=guardrails"></script>
   <script defer src="cabin-cases.js?v=1"></script>
-  <script defer src="viewer.js?v=thermal-saturated"></script>
+  <script defer src="facade-cases.js?v=2"></script>
+  <script defer src="auditorium-cases.js?v=standalone-study"></script>
+  <script defer src="vierendeel-cases.js?v=1"></script>
+  <script defer src="slab-cases.js?v=duct-context"></script>
+  <script defer src="viewer.js?v=auditorium-treatment-ab"></script>
 </head>
 <body>
   <aside>
@@ -38,6 +42,10 @@
       <a href="#terrace">Concrete Balcony</a>
       <a href="#atrium">Atrium Walkway</a>
       <a href="#cabin">Thermal Cabin</a>
+      <a href="#facade">Historic Facade</a>
+      <a href="#auditorium">Folded Auditorium</a>
+      <a href="#vierendeel">Vierendeel Cantilever</a>
+      <a href="#slab">Slab–Column Opening</a>
     </nav>
     <section class="sidebar-methodology" aria-labelledby="methodology-heading">
       <h2 class="sidebar-heading" id="methodology-heading">Methodology</h2>
@@ -139,6 +147,60 @@
       <span class="compression-swatch" aria-hidden="true"></span> <span id="connection-scale"></span>
     </div>
     <p class="result" aria-live="polite" id="readout"></p>
+    <section id="slab-response" class="housing-optimization" hidden>
+      <h2>Load transfer around the column</h2>
+      <p><span class="compression-swatch" aria-hidden="true"></span> Vertical shear stress on the cut · 0 to 0.50 MPa</p>
+      <table>
+        <thead><tr><th scope="col">Side of study cut</th><th scope="col">Share of shear</th></tr></thead>
+        <tbody id="slab-shares"></tbody>
+      </table>
+      <p>The blue outline marks the service opening. The duct and base pad provide 3D context. East is the side of the study cut facing the opening. Changes in parentheses are percentage points relative to the slab without an opening.</p>
+      <details>
+        <summary>Model assumptions</summary>
+        <p>Linear-elastic 3D concrete solids. The same 300 kN is distributed over the available slab surface in each variant. The cut is a fixed 1 m square. The shares come from the integrated vertical forces crossing the cut. Loads applied inside that square go to the column without crossing the cut.</p>
+        <p>The study shows shear redistribution. A punching resistance check would also account for reinforcement, cracking and failure.</p>
+      </details>
+    </section>
+    <section id="vierendeel-response" class="housing-optimization" hidden>
+      <h2>Window opening at the cantilever root</h2>
+      <p id="vierendeel-diagonals"></p>
+      <svg id="vierendeel-window" viewBox="0 0 510 310" width="510" height="310" role="img"
+           aria-label="Comparison of the original and deformed window opening"
+           style="display:block;width:100%;max-width:510px;height:auto"></svg>
+      <p>Dashed grey is the original opening. The orange diagonals are measurement lines. Window deformation is shown ×60 and building deformation ×20. All reported movements are actual model values.</p>
+      <details>
+        <summary>Model assumptions</summary>
+        <p>A linear 3D beam FEM represents the two steel Vierendeel frames and their transverse floor beams. The core is fixed. Illustrative floor loads are distributed 70% to the near facade and 30% to the far facade. The semi-rigid option adds 90 MN·m/rad rotational springs at the post ends in the facade plane. Slabs and the core volume are shown for context.</p>
+      </details>
+    </section>
+    <section id="auditorium-response" class="housing-optimization" hidden>
+      <div class="auditorium-listen" role="group" aria-label="Compare acoustic treatments from the same seat">
+        <button id="auditorium-play" data-wall="reflective" type="button">Play hard room</button>
+        <button id="auditorium-compare" data-wall="absorptive" type="button">Play treated room</button>
+      </div>
+      <span id="auditorium-audio-status" role="status"></span>
+      <p>The treated room adds absorptive panels to the ceiling and rear wall. Both clips use the same speaker and seat.</p>
+      <p id="auditorium-rear"></p>
+      <p id="auditorium-ceiling"></p>
+      <img id="auditorium-section" alt="Section showing the direct path and first reflections between the speaker and the selected seat."
+           style="display:block;width:100%;height:auto">
+      <details>
+        <summary>Model assumptions</summary>
+        <p>A centreline image-source model traces first-order specular reflections. The synthetic voice is filtered in three frequency bands. Surface absorption affects both early reflections and a diffuse reverberation tail. Audio illustrates relative changes across variants.</p>
+      </details>
+    </section>
+    <section id="facade-response" class="housing-optimization" hidden>
+      <p id="facade-stage-note"></p>
+      <table>
+        <thead><tr><th scope="col">Construction stage</th><th scope="col">Differential settlement</th></tr></thead>
+        <tbody id="facade-history"></tbody>
+      </table>
+      <p>Point A (blue) is outside the excavation. Point B (red) is above the gallery centre. Settlements are measured relative to the existing condition. Deformed geometry is amplified ×35 throughout.</p>
+      <details>
+        <summary>Model assumptions</summary>
+        <p>The existing facade is represented by its line load on a beam foundation. An Euler–Bernoulli finite element model on linear springs represents the ground, the temporary props and the permanent walls. The permanent transfer beam is activated in the excavated configuration. Ground stiffness and support properties are illustrative.</p>
+      </details>
+    </section>
     <p id="connection-assumptions" class="result" hidden></p>
     <p class="result" id="hanger-loss-readout" hidden></p>
     <p class="result" id="gable-reactions" hidden></p>

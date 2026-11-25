@@ -15,8 +15,16 @@ from projects.hypar import model as hypar
 from projects.terrace import model as terrace
 from projects.atrium import model as atrium
 from projects.cabin import model as cabin
+from projects.auditorium import model as auditorium
+from projects.facade import model as facade
+from projects.slab import model as slab
+from projects.vierendeel import model as vierendeel
 
 PROJECTS = {
+    "auditorium_acoustics": auditorium,
+    "historic_facade": facade,
+    "slab_opening": slab,
+    "vierendeel_cantilever": vierendeel,
     "shell": shelter,
     "gable": gable,
     "observatory": observatory,
@@ -32,7 +40,7 @@ PROJECTS = {
 }
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate plans, a STEP model and an Elmer result.")
+    parser = argparse.ArgumentParser(description="Generate drawings, model geometry and analysis results.")
     parser.add_argument("input_json", type=Path, help="Path to the case parameters.")
     parser.add_argument("--plans-only", action="store_true", help="Generate SVG drawings only.")
     args = parser.parse_args()
@@ -45,22 +53,28 @@ def main() -> None:
     model = case["structural_model"]["model"]
     if model not in PROJECTS:
         parser.error(f"Unknown structural model: {model}")
+    stem = path.with_suffix("")
+    project = PROJECTS[model]
     if "reinforcement" in case and model != "concrete_terrace":
         parser.error("These cases use homogeneous concrete without reinforcement.")
-    size = case["mesh"]["element_size_m"]
-    if not isfinite(size) or size <= 0:
-        parser.error("The mesh size must be finite and positive.")
+    if "mesh" in case:
+        size = case["mesh"]["element_size_m"]
+        if not isfinite(size) or size <= 0:
+            parser.error("The mesh size must be finite and positive.")
 
-    stem = path.with_suffix("")
     if args.plans_only:
-        PROJECTS[model].draw_case(stem, case)
+        project.draw_case(stem, case)
         return
     step = path.with_name(stem.name + "-model.step")
     mesh = path.with_name(stem.name + "-mesh.msh")
-    result_suffix = "-temperature.vtu" if model == "thermal_cabin" else "-displacements.vtu"
+    result_suffix = {
+        "thermal_cabin": "-temperature.vtu",
+        "auditorium_acoustics": "-acoustic-results.json",
+    }.get(model, "-displacements.vtu")
     result = path.with_name(stem.name + result_suffix)
-    PROJECTS[model].run_case(stem, step, mesh, result, case)
-    print(f"Wrote {step}, {mesh} and {result}")
+    project.run_case(stem, step, mesh, result, case)
+    outputs = (step, mesh, result) if mesh.exists() else (step, result)
+    print("Wrote " + ", ".join(map(str, outputs)))
 
 if __name__ == "__main__":
     main()

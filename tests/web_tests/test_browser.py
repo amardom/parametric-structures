@@ -40,7 +40,7 @@ def test_all_generated_projects_render_in_chromium(website_url):
             page.goto(website_url)
             nav = page.locator('nav a[href^="#"]')
             routes = nav.evaluate_all("links => links.map(link => link.hash)")
-            assert len(routes) == 12
+            assert len(routes) == 16
             for route in routes:
                 page.locator(f'nav a[href="{route}"]').click()
                 page.locator("#plans").click()
@@ -67,3 +67,22 @@ def test_all_generated_projects_render_in_chromium(website_url):
                     "return img.complete && img.naturalWidth > 0 && img.src.endsWith(project.selected.join('-') + '-plan.svg');}"
                 )
                 assert not errors,(route,errors)
+
+@pytest.mark.browser
+def test_auditorium_plays_both_treatments_from_the_middle_rows(website_url):
+    playwright = pytest.importorskip("playwright.sync_api")
+    with playwright.sync_playwright() as runtime:
+        if not Path(runtime.chromium.executable_path).is_file():
+            pytest.skip("Install Chromium with python -m playwright install chromium.")
+        with runtime.chromium.launch() as browser:
+            page = browser.new_page()
+            page.goto(website_url+"#auditorium")
+            page.locator("#result").click()
+            page.locator("#third-parameter").select_option("middle")
+            for roof in ("flat","folded"):
+                page.locator("#width").select_option(roof)
+                for button in ("#auditorium-play","#auditorium-compare"):
+                    page.locator(button).click()
+                    page.wait_for_function("auditoriumAudio?.currentTime > 0")
+                    assert page.locator("#auditorium-audio-status").text_content() == ""
+                    page.locator(button).click()

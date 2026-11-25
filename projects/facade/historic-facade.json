@@ -1,0 +1,18 @@
+{
+  "structural_model": {
+    "model": "historic_facade"
+  },
+  "gallery_width_m": 7,
+  "stage": "excavation",
+  "length_m": 14,
+  "gallery_center_m": 8,
+  "gallery_widths_m": [4, 7],
+  "gallery_depth_m": 3.3,
+  "foundation_rigidity_nm2": 220000000,
+  "transfer_rigidity_nm2": 18000000000,
+  "line_load_n_m": 155000,
+  "ground_stiffness_n_m2": 85000000,
+  "temporary_stiffness_n_m": 32000000,
+  "permanent_stiffness_n_m": 180000000,
+  "element_size_m": 0.25
+}

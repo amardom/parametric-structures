@@ -24,3 +24,10 @@ __pycache__/
 /website/atrium-cases.js
 *-temperature.vtu
 /website/cabin-cases.js
+/website/facade-cases.js
+/website/auditorium-cases.js
+/website/vierendeel-cases.js
+/website/slab-cases.js
+*-study-results.json
+*-acoustic-results.json
+*-speech.mp3

@@ -7,6 +7,7 @@ from main import PROJECTS
 @pytest.mark.parametrize("project", [
     "atrium", "bridge", "brutalist", "cabin", "canopy", "extension",
     "gable", "house", "hypar", "observatory", "shelter", "terrace",
+    "auditorium", "facade", "slab", "vierendeel",
 ])
 def test_case_exports_three_svg_drawings(project, load_case, tmp_path):
     case = load_case(project)

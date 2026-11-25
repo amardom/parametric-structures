@@ -74,3 +74,7 @@ canvas:active { cursor: grabbing; }
 
 .cabin-scale { display: flex; align-items: center; gap: .5rem; font-size: .82rem; }
 .cabin-scale i { width: 8rem; height: .55rem; border: 1px solid #8a958e; }
+
+#facade-history tr[aria-current] { background: #e3ebe7; }
+
+.auditorium-listen { display: flex; flex-wrap: wrap; gap: 6px; }

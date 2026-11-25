@@ -1,4 +1,5 @@
 import argparse
+from base64 import b64encode
 from concurrent.futures import ThreadPoolExecutor
 import json
 from itertools import combinations, product
@@ -1030,13 +1031,110 @@ def build_cabin(plans_only):
         (WEBSITE/"cabin-cases.js").write_text(
             "window.cabinCases = "+json.dumps(variants,separators=(",",":"),allow_nan=False)+";\n",encoding="utf-8")
 
+def study_geometry(path):
+    parts = []
+    for shape,name,_,_ in cq.Assembly.load(str(path)):
+        material = name.rsplit("/",1)[-1].rsplit("_",1)[0]
+        points,faces = shape.tessellate(.5)
+        if faces:
+            parts.append({"material":material,"points":[round(v/1000,7) for p in points for v in p.toTuple()],
+                              "faces":faces})
+        else:
+            edges = [edge.Vertices() for edge in shape.Edges()]
+            if edges:
+                parts.append({"material":material,
+                                  "points":[round(v/1000,7) for edge in edges for p in edge for v in p.toTuple()],
+                                  "faces":[[2*i,2*i+1] for i in range(len(edges))]})
+    return parts
+
+def study_payload(project,config,case):
+    sys.path.insert(0,str(ROOT))
+    def artifact(suffix):
+        return config.with_name(config.stem+suffix)
+    cad = study_geometry(artifact("-model.step"))
+    if project == "auditorium":
+        from projects.auditorium.model import geometry
+
+        result = json.loads(artifact("-acoustic-results.json").read_text())
+        roof,rear = case["roof"],case["treatment"]
+        room = geometry(case,roof,rear)
+        result["parts"] = geometry(case,roof,rear,result["paths"])[len(room):]
+        result["audio_mp3"] = b64encode(artifact("-speech.mp3").read_bytes()).decode("ascii")
+        return {"cad":cad,"result":result}
+    result = json.loads(artifact("-study-results.json").read_text())
+    reader = vtkXMLUnstructuredGridReader()
+    reader.SetFileName(str(artifact("-displacements.vtu")))
+    reader.Update()
+    grid = reader.GetOutput()
+    points = vtk_to_numpy(grid.GetPoints().GetData())
+    displacement = vtk_to_numpy(grid.GetPointData().GetVectors())
+    if project == "facade":
+        from projects.facade.model import parts
+
+        result["parts"] = parts(case,case["gallery_width_m"],case["stage"],points[:,0],-displacement[:,2])
+    elif project == "vierendeel":
+        from projects.vierendeel.model import frame,geometry
+
+        nodes,members = frame(case,case["bay_width_m"])
+        result["parts"] = geometry(case,nodes,members,dict(zip(nodes,displacement,strict=True)))
+    else:
+        from projects.slab.model import visualise
+
+        cells = vtk_to_numpy(grid.GetCells().GetConnectivityArray()).reshape(-1,8)
+        result.update(visualise(case,case["opening"],points,cells,displacement.ravel())["result"])
+    return {"cad":cad,"result":result}
+
+def build_study(project,config_name,variable,options,plans_only):
+    baseline = json.loads((PROJECTS/project/config_name).read_text(encoding="utf-8"))
+    variants = {}
+    with TemporaryDirectory() as directory:
+        for key,overrides in options:
+            config = Path(directory)/f"{key}.json"
+            case = {**baseline,**overrides}
+            config.write_text(json.dumps(case),encoding="utf-8")
+            run_variant(config,project,key,plans_only)
+            if not plans_only:
+                variants[key] = study_payload(project,config,case)
+    if not plans_only:
+        (WEBSITE/f"{project}-cases.js").write_text(
+            f"window.{variable} = "+json.dumps(variants,separators=(",",":"),allow_nan=False)+";\n",
+            encoding="utf-8")
+
+def build_facade(plans_only):
+    options = ((f"{width:g}-{stage}",{"gallery_width_m":width,"stage":stage})
+               for width,stage in product((4,7),("existing","underpinning","excavation","permanent")))
+    build_study("facade","historic-facade.json","facadeCases",options,plans_only)
+
+def build_auditorium(plans_only):
+    options = ((f"{roof}-{treatment}-{row}",{"roof":roof,"treatment":treatment,"row":row})
+               for roof,treatment,row in product(("flat","folded"),("reflective","absorptive"),
+                                                 ("front","middle","back")))
+    build_study("auditorium","auditorium.json","auditoriumCases",options,plans_only)
+
+def build_vierendeel(plans_only):
+    options = ((f"{width:g}-{joint}",{"bay_width_m":width,"joint":joint})
+               for width,joint in product((3,4),("rigid","flexible")))
+    build_study("vierendeel","cantilever-building.json","vierendeelCases",options,plans_only)
+
+def build_slab(plans_only):
+    options = ((variant,{"opening":variant}) for variant in ("none","near","far"))
+    build_study("slab","slab-opening.json","slabCases",options,plans_only)
+
 def main():
     parser = argparse.ArgumentParser(description="Precompute the configurations used by the static viewer.")
-    parser.add_argument("project", nargs="?", choices=("shelter", "gable", "observatory", "house", "canopy", "hypar", "bridge", "extension", "brutalist", "terrace", "atrium", "cabin"))
+    parser.add_argument("project", nargs="?", choices=("shelter", "gable", "observatory", "house", "canopy", "hypar", "bridge", "extension", "brutalist", "terrace", "atrium", "cabin", "facade", "auditorium", "vierendeel", "slab"))
     parser.add_argument("--plans-only", action="store_true", help="Export SVG drawings without running Elmer.")
     args = parser.parse_args()
-    for model in ((args.project,) if args.project else ("shelter", "gable", "observatory", "house", "canopy", "hypar", "bridge", "extension", "brutalist", "terrace", "atrium", "cabin")):
-        if model == "cabin":
+    for model in ((args.project,) if args.project else ("shelter", "gable", "observatory", "house", "canopy", "hypar", "bridge", "extension", "brutalist", "terrace", "atrium", "cabin", "facade", "auditorium", "vierendeel", "slab")):
+        if model == "slab":
+            build_slab(args.plans_only)
+        elif model == "vierendeel":
+            build_vierendeel(args.plans_only)
+        elif model == "auditorium":
+            build_auditorium(args.plans_only)
+        elif model == "facade":
+            build_facade(args.plans_only)
+        elif model == "cabin":
             build_cabin(args.plans_only)
         elif model == "atrium":
             build_atrium(args.plans_only)
