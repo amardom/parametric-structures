@@ -78,3 +78,8 @@ canvas:active { cursor: grabbing; }
 #facade-history tr[aria-current] { background: #e3ebe7; }
 
 .auditorium-listen { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.model-assumptions h3 {
+  font: inherit;
+  text-decoration: underline;
+}

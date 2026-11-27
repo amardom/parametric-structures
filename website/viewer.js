@@ -322,6 +322,7 @@ let atriumState;
 const terraceCracking = document.querySelector("#terrace-cracking");
 const terraceCrackingMap = document.querySelector("#terrace-cracking-map");
 const shelterReactions = document.querySelector("#shelter-reactions");
+const shelterWindowComparison = document.querySelector("#shelter-window-comparison");
 const gable = projects.gable;
 const gableLoad = document.querySelector("#gable-load");
 const gableReactions = document.querySelector("#gable-reactions");
@@ -339,6 +340,7 @@ const extensionStudy = document.querySelector("#extension-study");
 const extensionDetails = window.extensionDetails;
 const wallReactions = document.querySelector("#wall-reactions");
 const hyparLoad = document.querySelector("#hypar-load");
+const hyparUpliftNote = document.querySelector("#hypar-uplift-note");
 const boltForces = document.querySelector("#bolt-forces");
 const houseRenderMeshes = new WeakMap();
 const sweep = window.observatoryCases;
@@ -423,8 +425,14 @@ function selectVariant() {
   document.querySelector("#connection-assumptions").hidden = !connection;
   gableLoad.closest("label").hidden = project !== gable || mode !== "result" || !variant?.wind;
   shelterReactions.hidden = project !== shelter || mode !== "result" || !variant;
+  document.querySelector("#house-deflection-note").hidden = project !== house || mode !== "result" || !variant;
+  document.querySelector("#canopy-anchor-note").hidden = project !== canopy || mode !== "result" || !variant;
+  shelterWindowComparison.hidden = shelterReactions.hidden;
   gableReactions.hidden = project !== gable || mode !== "result" || !variant;
+  document.querySelector("#observatory-glazing-note").hidden = project !== observatory || mode !== "result" || !variant;
+  document.querySelector("#gable-uplift-note").hidden = gableReactions.hidden;
   hyparLoad.closest("label").hidden = project !== hypar || mode !== "result" || !variant;
+  hyparUpliftNote.hidden = hyparLoad.closest("label").hidden || hyparLoad.value !== "wind" || !variant?.uplift_pa;
   tabs.forEach((tab) => tab.setAttribute("aria-pressed", String(tab.id === mode)));
   document.querySelector("#cad").textContent = project === slab ? "Solid Geometry" : project === vierendeel ? "Frame Geometry" : project === facade || project === auditorium ? "Section Geometry" : "STEP Geometry";
   document.querySelector("#result").textContent = project === slab ? "Shear Transfer" : project === auditorium ? "Acoustic Response" : project === facade ? "Stage Response" : project === atrium ? "Harmonic Response" : project === cabin ? "Thermal Response" : "FE Deformed Shape";
@@ -636,6 +644,15 @@ function selectVariant() {
     const reaction = index => format.format(force[index]) + " kN (" + Math.round(100 * force[index] / total) + "%)";
     shelterReactions.textContent = "Vertical wall base reactions · Left " + reaction(0)
       + " · Rear " + reaction(2) + " · Right " + reaction(1);
+    const prefix = project.selected.slice(0, 2).join("-");
+    const [original, wide, shifted] = ["original", "wide", "shifted"]
+      .map(opening => shelter.cases[prefix + "-" + opening].result);
+    const leftShare = ({ wall_reactions_kn: reactions }) =>
+      Math.round(100 * reactions[0] / reactions.reduce((sum, value) => sum + value, 0));
+    shelterWindowComparison.textContent = "Widening the window increases the roof deflection above it from "
+      + format.format(original.window_mm) + " to " + format.format(wide.window_mm)
+      + " mm. Shifting the wider window left raises the left wall’s share of the vertical reaction from "
+      + leftShare(wide) + "% to " + leftShare(shifted) + "%.";
     readout.textContent = "Maximum roof deflection above window " + format.format(result.window_mm)
       + " mm ↓ · Front edge " + format.format(result.front_mm) + " mm ↓";
   } else if (project === gable) {
@@ -646,6 +663,9 @@ function selectVariant() {
     readout.textContent = load + "Entrance corner movements, left " + motion(left) + ", right " + motion(right)
       + " · Difference " + format.format(Math.abs(left - right)) + " mm"
       + " · Peak vertical movement " + format.format(result.max_abs_mm) + " mm";
+    document.querySelector("#gable-uplift-note").textContent = variant.wind
+      ? "The wind case applies " + variant.uplift_pa / 1000 + " kPa of illustrative uplift to the corner zone marked on the plan."
+      : "With no entrance overhang, there is no corner zone for the illustrative wind load.";
     const reactions = result.reactions_kn.map(kn => format.format(kn) + " kN");
     gableReactions.textContent = "Vertical base reactions, left / right · Entrance " + reactions.slice(0,2).join(" / ")
       + " · Rear " + reactions.slice(2).join(" / ");
@@ -657,6 +677,14 @@ function selectVariant() {
     readout.textContent = "Low tip " + motion(low) + " · High tip " + motion(high)
       + " · Differential movement " + format.format(Math.abs(high - low)) + " mm"
       + " · Wall moment " + format.format(Math.abs(moment)) + " kN·m (" + direction + ")";
+    if (!hyparUpliftNote.hidden) {
+      const [left, right] = variant.uplift_pa.map(pressure => format.format(pressure / 1000));
+      const projection = thickness.value;
+      const [shallow, steep] = [30, 60].map(rise => hypar.cases[rise + "-" + projection].result.tips_mm[1]);
+      hyparUpliftNote.textContent = "Both shapes use the same illustrative uplift of " + left + " kPa on the left zone and "
+        + right + " kPa on the right. At " + projection + " m projection, the high tip rises "
+        + format.format(shallow) + " mm at ±0.30 m and " + format.format(steep) + " mm at ±0.60 m.";
+    }
   } else if (project === bridge) {
     readout.textContent = "Maximum deck deflection " + format.format(result.deck_mm)
       + " mm ↓ · Maximum hanger tension " + format.format(result.hanger_kn) + " kN";

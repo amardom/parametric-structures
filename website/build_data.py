@@ -540,7 +540,8 @@ def build_hypar(plans_only):
             cad, masses = hypar_step_geometry(stem + "-model.step", case["structural_model"]["density_kg_m3"])
             print("hypar", key, "self-weight", self_weight["tips_mm"], "wind", wind["tips_mm"], flush=True)
             return key, {"cad": cad, "result": wind, "gravity": self_weight,
-                         "material_masses_kg": masses, "geometry": geometry}
+                         "material_masses_kg": masses, "geometry": geometry,
+                         "uplift_pa": [variant["loads"][f"{side}_uplift_pa"] for side in ("left", "right")]}
 
     with ThreadPoolExecutor(max_workers=2) as workers:
         variants = dict(workers.map(solve, product((30, 60), (3, 6))))
