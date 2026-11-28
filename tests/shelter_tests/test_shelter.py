@@ -55,3 +55,14 @@ def test_roof_shell_connects_all_three_walls(load_case,read_msh,tmp_path):
     width,depth,_ = geometry["roof"]["max"]
     for axis,coordinate in ((0,thickness/2),(0,width-thickness/2),(1,depth-thickness/2)):
         assert sum(point[axis] == pytest.approx(coordinate) for point in shared) > 2
+
+def test_offset_preserves_opening_width_and_seats_it_in_the_rear_wall(load_case):
+    g = load_case("shelter")["geometry"]
+    g["rear_window"]["offset_m"] = -.6
+    geometry = build_concrete_geometry(g)
+    window = geometry["rear_window"]
+    assert window["max"][0]-window["min"][0] == pytest.approx(g["rear_window"]["width_m"])
+    assert (window["max"][0]+window["min"][0])/2 == pytest.approx(g["width_m"]/2-.6)
+    assert window["min"][1] == geometry["walls"]["rear"]["min"][1]
+    assert window["max"][1] == geometry["walls"]["rear"]["max"][1]
+    assert window["max"][2] == geometry["roof"]["min"][2]

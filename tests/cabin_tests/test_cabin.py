@@ -40,3 +40,13 @@ def test_weather_repeats_each_simulated_day(load_case):
     case = load_case("cabin")
     for hour in (0,8,12,17,23):
         assert thermal.weather_at(case,hour*3600) == thermal.weather_at(case,(hour+24)*3600)
+
+def test_glazing_solar_factor_scales_transmission_only(load_case):
+    case = load_case("cabin")
+    original,irradiance,gain = thermal.weather_at(case,15*3600)
+    assert gain > 0
+    case["windows"]["solar_factor"] *= .5
+    outdoor,solar,transmitted = thermal.weather_at(case,15*3600)
+    assert outdoor == original
+    assert solar == irradiance
+    assert transmitted == pytest.approx(gain/2)

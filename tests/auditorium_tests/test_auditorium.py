@@ -77,3 +77,20 @@ def test_absorptive_treatment_shortens_all_three_decay_bands():
     treated = [decay_time(case,"flat","absorptive",band) for band in range(3)]
     assert all(a < b for a,b in zip(treated,untreated,strict=True))
     assert treated[2]/untreated[2] < treated[0]/untreated[0]
+
+def test_reflection_delays_and_gains_are_consistent_for_each_seat(load_case):
+    from math import dist
+
+    case = load_case("auditorium")
+    for roof in ("flat","folded"):
+        for receiver in case["seats_m"]:
+            paths = reflection_paths(case,roof,"reflective",receiver)
+            direct, *reflected = paths
+            assert direct["kind"] == "direct"
+            assert reflected
+            distance = dist(*direct["points"])
+            for path in reflected:
+                source,bounce,seat = path["points"]
+                length = dist(source,bounce)+dist(bounce,seat)
+                assert path["delay_ms"] == pytest.approx(1000*(length-distance)/case["sound_speed_m_s"])
+                assert 0 < path["gain"] < direct["gain"]

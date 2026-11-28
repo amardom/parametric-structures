@@ -56,3 +56,22 @@ def test_load_patch_follows_column_offset(load_case,read_msh,tmp_path):
     xs = [nodes[i][0] for kind,body,ids in cells if (kind,body) == (3,4) for i in ids]
     assert (min(xs),max(xs)) == approx((g["column_offset_m"]-g["column_side_m"]/2,
                                        g["column_offset_m"]+g["column_side_m"]/2))
+
+def test_mirrored_column_offset_preserves_load_patch_area(load_case,read_msh,tmp_path):
+    import numpy as np
+
+    case = load_case("extension")
+    g = case["geometry"]
+    span = g["span_m"]
+    patches = []
+    for offset in (.25*span,.75*span):
+        g["column_offset_m"] = offset
+        path = tmp_path/f"offset-{offset:g}.msh"
+        extension_mesh(path,case)
+        nodes,cells = read_msh(path)
+        loaded = [np.array([nodes[node] for node in ids])
+                  for kind,body,ids in cells if (kind,body) == (3,4)]
+        assert loaded
+        patches.append(sorted(tuple(round(float(x),7) for x in point)
+                              for face in loaded for point in face))
+    assert sorted((round(span-x,7),y,z) for x,y,z in patches[0]) == patches[1]

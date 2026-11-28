@@ -46,3 +46,15 @@ def test_negative_roof_pressure_is_rejected(load_case):
     case["loads"]["roof_pressure_pa"] = -1
     with pytest.raises(ValueError,match="non-negative"):
         loading(case)
+
+def test_wind_patch_has_the_projected_area_of_one_roof_half(load_case,read_msh,tmp_path):
+    width,depth,eave,rise,*_ = gable_dimensions(load_case("gable"))
+    projection = 2
+    path = tmp_path/"wind.msh"
+    gable_mesh(path,width,depth,eave,rise,.55,projection=projection)
+    nodes,cells = read_msh(path)
+    patches = [[nodes[node] for node in ids] for kind,body,ids in cells if (kind,body) == (3,3)]
+    assert patches
+    area = sum(abs(sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(face,face[1:]+face[:1])))/2
+               for face in patches)
+    assert area == pytest.approx(projection*width/2)

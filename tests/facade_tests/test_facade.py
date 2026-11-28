@@ -62,3 +62,13 @@ def test_excavation_differential_is_stable_when_station_spacing_is_halved():
     baseline = differential()
     config["element_size_m"] /= 2
     assert differential() == pytest.approx(baseline,rel=.02)
+
+def test_scaled_line_load_scales_every_stage_movement(load_case):
+    case = load_case("facade")
+    width = case["gallery_width_m"]
+    stations,sensors,states = stage_results(case,width)
+    case["line_load_n_m"] *= 2
+    double_stations,double_sensors,double_states = stage_results(case,width)
+    assert double_stations == stations
+    assert double_sensors == sensors
+    np.testing.assert_allclose(double_states,2*np.asarray(states),rtol=1e-8,atol=1e-10)

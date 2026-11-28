@@ -47,3 +47,18 @@ def test_cut_shear_excludes_the_load_applied_inside_the_cut():
     result = solve_model(config,"none")["result"]
     loaded_fraction_inside = (config["control_half_width_m"]/config["half_span_m"])**2
     assert result["shear_kn"] == pytest.approx(result["reaction_kn"]*(1-loaded_fraction_inside))
+
+def test_near_opening_interrupts_the_east_cut_while_far_opening_does_not(load_case):
+    from projects.slab.model import mesh
+
+    config = load_case("slab")
+    cut = config["control_half_width_m"]
+    for variant in ("near","far"):
+        nodes,cells,_ = mesh(config,variant)
+        faces = nodes[cells[:,[1,5,6,2]]]
+        face_centres = faces.mean(axis=1)
+        on_east_cut = np.all(np.isclose(faces[:,:,0],cut),axis=1) & (np.abs(face_centres[:,1]) < cut)
+        east = faces[on_east_cut]
+        area = sum(np.ptp(face[:,1])*np.ptp(face[:,2]) for face in east)
+        opening_width_on_cut = config["opening_length_m"] if variant == "near" else 0
+        assert area == pytest.approx((2*cut-opening_width_on_cut)*config["slab_thickness_m"])

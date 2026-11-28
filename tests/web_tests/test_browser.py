@@ -86,3 +86,50 @@ def test_auditorium_plays_both_treatments_from_the_middle_rows(website_url):
                     page.wait_for_function("auditoriumAudio?.currentTime > 0")
                     assert page.locator("#auditorium-audio-status").text_content() == ""
                     page.locator(button).click()
+
+@pytest.mark.browser
+def test_updated_result_views_follow_project_parameters(website_url):
+    playwright = pytest.importorskip("playwright.sync_api")
+    with playwright.sync_playwright() as runtime:
+        if not Path(runtime.chromium.executable_path).is_file():
+            pytest.skip("Install Chromium with python -m playwright install chromium.")
+        with runtime.chromium.launch() as browser:
+            page = browser.new_page()
+            page.goto(website_url+"#bridge")
+            page.locator("#result").click()
+            comparison = page.locator("#hanger-loss-comparison")
+            assert comparison.is_hidden()
+            page.locator("#bridge-condition").select_option("loss")
+            assert comparison.is_visible()
+            assert comparison.locator("tbody tr").count() == 4
+            assert page.evaluate("""() => {
+              const marker = parts.at(-1);
+              const intact = bridge.cases[project.selected.join("-")].result;
+              const remaining = parts.find(part => part.hangerChanges);
+              return marker.color && marker.faces.every(face => face.length === 2)
+                && new Set(marker.points.filter((_,index) => index % 3 === 2)).size === 1
+                && remaining.faces.length === intact.faces.filter(face => face.length === 2).length - 1;
+            }""")
+            page.locator("#bridge-condition").select_option("intact")
+            assert comparison.is_hidden()
+
+            page.locator('nav a[href="#facade"]').click()
+            page.locator("#result").click()
+            page.locator("#thickness").select_option("excavation")
+            assert "A ↑" in page.locator("#readout").inner_text()
+            assert "B ↓" in page.locator("#readout").inner_text()
+            page.locator("#thickness").select_option("permanent")
+            assert "accumulated during excavation" in page.locator("#facade-stage-note").inner_text()
+
+            page.locator('nav a[href="#slab"]').click()
+            page.locator("#result").click()
+            for opening,description in (("none","25%"),("near","interrupts"),("far","outside")):
+                page.locator("#width").select_option(opening)
+                assert description in page.locator("#slab-cut-reading").inner_text()
+                assert page.locator("#slab-shares tr").count() == 4
+                assert page.evaluate("""() => {
+                  const cut = parts.find(part => part.cornerStress);
+                  return cut.faces.length === cut.cornerStress.length
+                    && cut.cornerStress.some(face => new Set(face).size > 1)
+                    && parts.some(part => part.material === "slabEast");
+                }""")

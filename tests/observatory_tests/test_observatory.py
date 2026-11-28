@@ -36,3 +36,10 @@ def test_circular_rib_area_equals_outer_area_minus_void():
 
     diameter,wall = .06,.004
     assert tube_area(diameter,wall) == pytest.approx(pi/4*(diameter**2-(diameter-2*wall)**2))
+
+def test_glass_weight_is_distributed_only_to_frame_members(load_case):
+    _, ribs, ring, _, _, glass = observatory_case_mesh(load_case("observatory"))
+    assert glass
+    assert set(glass) <= set(ribs) | set(ring)
+    assert set(glass) & set(ring)
+    assert all(mass > 0 for mass in glass.values())

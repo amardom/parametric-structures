@@ -49,3 +49,20 @@ def test_deck_nodes_are_shared_by_every_hanger(load_case,read_msh,tmp_path):
         assert bottom in deck and top not in deck
         assert nodes[bottom][:2] == nodes[top][:2]
         assert nodes[top][2] > 0
+
+def test_hanger_mesh_reaches_the_arch_axis_and_deck(load_case,read_msh,tmp_path):
+    from projects.bridge.model import arch_height
+
+    case = load_case("bridge")
+    path = tmp_path/"bridge.msh"
+    bridge_mesh(path,case)
+    nodes,cells = read_msh(path)
+    hangers = [ids for kind,body,ids in cells if (kind,body) == (1,2)]
+    arch_nodes = {node for kind,body,ids in cells if (kind,body) == (3,3) for node in ids}
+    assert hangers
+    for a,b in hangers:
+        low,high = sorted((a,b),key=lambda node:nodes[node][2])
+        x,y,z = nodes[low]
+        assert z == 0
+        assert high in arch_nodes
+        assert nodes[high] == pytest.approx((x,y,arch_height(case["geometry"],x)))

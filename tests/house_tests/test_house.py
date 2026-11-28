@@ -50,3 +50,13 @@ def test_wall_shells_reach_both_slab_levels(load_case,read_msh,tmp_path):
         shared = [nodes[i] for i in walls & slab]
         assert len({x for x,_,_ in shared}) > 1
         assert len({y for _,y,_ in shared}) > 1
+
+def test_shell_footprint_has_no_glazing_cells(load_case,read_msh,tmp_path):
+    g = load_case("house")["geometry"]
+    path = tmp_path/"shells.msh"
+    house_mesh(path,g,.75)
+    nodes,cells = read_msh(path)
+    walls = [[nodes[node] for node in ids] for kind,body,ids in cells if (kind,body) == (3,3)]
+    assert walls
+    assert not any(all(point[0] == g["width_m"] for point in face)
+                   or all(point[1] == g["depth_m"] for point in face) for face in walls)

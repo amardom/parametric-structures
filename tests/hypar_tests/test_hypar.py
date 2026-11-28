@@ -47,3 +47,17 @@ def test_plate_mesh_contains_all_four_cad_corners(load_case):
     plates,_,_ = surface_cells(case)
     nodes = {point for _,panel in plates for point in panel}
     assert set(corners(case["geometry"])) <= nodes
+
+def test_wind_zones_tile_the_plan_symmetrically(load_case):
+    from collections import Counter
+
+    from projects.hypar.model import surface_cells
+
+    case = load_case("hypar")
+    plates,_,_ = surface_cells(case)
+    areas = Counter()
+    for zone,face in plates:
+        assert all(y <= 0 if zone == 3 else y >= 0 for _,y,_ in face)
+        areas[zone] += abs(sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(face,face[1:]+face[:1])))/2
+    g = case["geometry"]
+    assert dict(areas) == pytest.approx(dict.fromkeys((3,4),g["projection_m"]*g["width_m"]/2))

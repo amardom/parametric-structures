@@ -4,6 +4,8 @@ Parametric studies for architectural design. Each JSON case defines a geometry a
 
 The models use beams and hangers, shells or 3D solids as appropriate. Structural cases cover static response, harmonic response and concrete volume optimisation. The thermal case couples transient 1D heat conduction through the envelope to an indoor-air energy balance.
 
+<https://parametric-structures.pages.dev/>
+
 ## Run
 
 Use Linux or WSL with Python 3.12 and ElmerSolver and ElmerGrid available on PATH. Cases with custom Fortran elements also require Elmer's development tools, including `elmerf90`, and a Fortran compiler. The build downloads the upstream Elmer shell source for those cases.

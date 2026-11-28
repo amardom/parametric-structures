@@ -48,3 +48,12 @@ def test_diameter_is_the_only_fixed_boundary(load_case,read_msh,tmp_path):
     fixed = {i for kind,body,ids in cells if (kind,body) == (1,3) for i in ids}
     assert fixed
     assert fixed == {i for i,(_,y,_) in nodes.items() if abs(y) < 1e-9}
+
+def test_strip_pressure_combines_surface_load_and_slab_self_weight(load_case):
+    case = load_case("terrace")
+    initial = model.strip_pressure(case)
+    density = case["structural_model"]["density_kg_m3"]
+    gravity = case["structural_model"]["gravity_m_s2"]
+    case["geometry"]["slab_thickness_m"] += .05
+    case["loads"]["surface_pressure_pa"] += 1000
+    assert model.strip_pressure(case)-initial == pytest.approx(1000+.05*density*gravity)

@@ -43,3 +43,15 @@ def test_larger_bolt_edge_distance_raises_wall_without_moving_anchor(load_case):
     g["edge_distance_m"] += .04
     assert wall_top()-before == pytest.approx(.04)
     assert anchor_height(g,45) == initial_anchor
+
+def test_cad_bolt_embedment_and_diameter_match_the_config(load_case):
+    from projects.canopy.model import canopy_cad
+
+    g = load_case("canopy")["geometry"]
+    bolts = [shape.BoundingBox() for shape,name,_,_ in canopy_cad(g,45)
+             if name.rsplit("/",1)[-1].startswith("Bolt_")]
+    assert len(bolts) == 2*g["bolts"]
+    for bounds in bolts:
+        assert bounds.ymin/1000 == pytest.approx(-g["embedment_m"])
+        assert bounds.xlen/1000 == pytest.approx(g["anchor_diameter_m"])
+        assert bounds.ymax/1000 > g["plate_thickness_m"]

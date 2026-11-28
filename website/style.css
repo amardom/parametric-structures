@@ -8,7 +8,7 @@ nav { margin-top: 55px; font-size: .875rem; }
 nav a { display: block; margin-bottom: 5px; }
 nav a[aria-current] { font-weight: bold; }
 .sidebar-heading { margin: 0 0 8px; color: #525956; font: inherit; font-size: .9375rem; }
-.sidebar-methodology { margin-top: 36px; font-size: .875rem; }
+.sidebar-methodology, .sidebar-source { margin: 36px 0 0; font-size: .875rem; }
 .sidebar-methodology p { margin: 0 0 8px; }
 main { max-width: 1200px; width: 100%; padding: 42px clamp(24px, 5vw, 78px) 40px; }
 h1 { font: normal clamp(1.9rem, 4vw, 3rem)/1.08 Georgia, serif; letter-spacing: -.025em; margin: 0 0 7px; }
@@ -35,7 +35,7 @@ canvas:active { cursor: grabbing; }
   aside { border-right: 0; border-bottom: 1px solid #bcbdb4; padding: 16px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 15px; }
   nav { margin: 0; }
   nav p { display: none; }
-  .sidebar-methodology { flex-basis: 100%; margin-top: 12px; }
+  .sidebar-methodology, .sidebar-source { flex-basis: 100%; margin-top: 12px; }
   main { padding: 26px 20px; }
 }
 

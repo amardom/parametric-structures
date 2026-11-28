@@ -49,3 +49,13 @@ def test_narrower_facade_bays_add_posts_without_extending_the_cantilever():
     assert max(x for x,_,_ in narrow.values()) == max(x for x,_,_ in wide.values()) == config["length_m"]
     assert sum(kind == "post" for _,_,kind in narrow_members) == 20
     assert sum(kind == "post" for _,_,kind in wide_members) == 16
+
+def test_balanced_gravity_load_produces_symmetric_frame_deflection(load_case):
+    case = load_case("vierendeel")
+    case["near_side_load_fraction"] = .5
+    for joint in ("rigid","flexible"):
+        nodes,_,motion = solve_frame(case,case["bay_width_m"],joint)
+        for station,side,level in nodes:
+            if side == 0:
+                np.testing.assert_allclose(motion[station,side,level],
+                                           motion[station,1,level]*[1,-1,1],atol=1e-10)

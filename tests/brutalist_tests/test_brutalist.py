@@ -48,3 +48,12 @@ def test_floor_shells_leave_the_core_shaft_clear(load_case):
         area_by_level[zs[0]] = area_by_level.get(zs[0],0)+(max(xs)-min(xs))*(max(ys)-min(ys))
     assert len(area_by_level) == load_case("brutalist")["geometry"]["storeys"]
     assert all(area == pytest.approx(SLAB_AREA) for area in area_by_level.values())
+
+def test_band_area_changes_match_wall_area_of_added_storeys(load_case):
+    case = load_case("brutalist")
+    case["geometry"]["storeys"] = 6
+    _,areas = volumes(case)
+    case["geometry"]["storeys"] = 7
+    _,extended = volumes(case)
+    assert extended[:2] == pytest.approx([1.5*area for area in areas[:2]])
+    assert extended[2:] == pytest.approx(areas[2:])

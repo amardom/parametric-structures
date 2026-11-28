@@ -44,3 +44,12 @@ def test_exterior_faces_omit_shared_hex_face():
     faces = model.outer_faces([(1,2,3,4,5,6,7,8),(2,9,10,3,6,11,12,7)])
     assert len(faces) == 10
     assert {1,2,5,6} not in [set(face) for face in faces]
+
+def test_footfall_pressure_preserves_total_harmonic_force(load_case):
+    case = load_case("atrium")
+    area = .36
+    settings = model.sif(case,5,{2:1,3:area})
+    force = case["loads"]["footfall_amplitude_n"]
+    pressures = [float(line.split()[-1]) for line in settings.splitlines() if "Force 3 = Real" in line]
+    assert len(pressures) == 1
+    assert abs(pressures[0])*area == pytest.approx(force)
