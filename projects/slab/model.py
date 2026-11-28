@@ -229,6 +229,14 @@ def visualise(config,variant,nodes,cells,displacement):
     outer = [facet for facet in shell if centers[facet[0],2] >= 0]
     stress_parts = [part(context,"slabConcrete"),part(outer,"slabConcrete",opacity=.25),
                     part(cut_faces,"slabConcrete",stress=True)]
+    z = config["slab_thickness_m"]+.012
+    sw,se,ne,nw = [(-cut,-cut,z),(cut,-cut,z),(cut,cut,z),(-cut,cut,z)]
+    for start,end,material in ((sw,se,"slabCut"),(se,ne,"slabEast"),(ne,nw,"slabCut"),(nw,sw,"slabCut")):
+        points = [value + fraction*(target-value)
+                  for dash in range(7) for fraction in (dash/7,(dash+.68)/7)
+                  for value,target in zip(start,end,strict=True)]
+        stress_parts.append({"material":material,"points":points,
+                             "faces":[[2*i,2*i+1] for i in range(7)]})
     hole = opening(config,variant)
     if hole:
         left,right,south,north = hole
@@ -265,12 +273,19 @@ def draw_case(stem,config):
             rect(-core/2,-core/2,core,core,"wall"),
             f'<rect x="{cx-cut*scale:g}" y="{cy-cut*scale:g}" width="{2*cut*scale:g}" '
             f'height="{2*cut*scale:g}" fill="none" class="cut"/>',
-            label(cx,cy-cut*scale-13,"Shear integration cut",anchor="middle"),
+            label(cx,cy-cut*scale-47,f"{2*cut:g} m × {2*cut:g} m shear cut",anchor="middle"),
+            label(cx,cy-cut*scale-12,"North",anchor="middle"),
+            label(cx,cy+cut*scale+21,"South",anchor="middle"),
+            label(cx-cut*scale-11,cy+4,"West",anchor="end"),
             *dimension(cx-span*scale,cy+span*scale,cx+span*scale,cy+span*scale,38,2*span)]
     if hole:
         left,right,south,north = hole
         plan.append(rect(left,-north,right-left,north-south,"glass"))
-        plan.append(label(cx+(left+right)/2*scale,cy+68,"Service opening",anchor="middle"))
+        plan.append(label(cx+(left+right)/2*scale,cy+105,"Service opening",anchor="middle"))
+    east = cx+cut*scale
+    plan += [f'<path d="M{east:g} {cy-cut*scale:g}V{cy+cut*scale:g}" fill="none" '
+             'stroke="#825a97" stroke-width="2.5" stroke-dasharray="9 5"/>',
+             label(east+10,cy-cut*scale+18,"East")]
     sheet("plan","Slab plan and shear integration cut","SO-01",plan)
     elevation = [rect(-span,-t,2*span,t,"roof"),rect(-core/2,0,core,h,"wall"),
                  *dimension(cx-core*scale/2,cy+h*scale,cx+core*scale/2,cy+h*scale,38,core,millimetres=True)]
@@ -296,8 +311,13 @@ def run_case(stem,step,mesh_path,result,config):
         left,right,south,north = [1000*value for value in hole]
         floor = floor.cut(cq.Solid.makeBox(right-left,north-south,thickness+2,cq.Vector(left,south,-1)))
     column = cq.Solid.makeBox(side,side,height,cq.Vector(-side/2,-side/2,-height))
+    extension = 1300
+    neighbouring_slab = cq.Solid.makeBox(extension,span,thickness,cq.Vector(span/2,-span/2,0))
+    neighbouring_column = cq.Solid.makeBox(side,side,2600,
+                                           cq.Vector(span/2+extension*.75-side/2,-side/2,-2600))
     write_step(step,architectural_context(config,variant,show_cut=False),
-               (("slabConcrete_0",floor.fuse(column).clean()),))
+               (("slabConcrete_0",floor.fuse(column).clean()),
+                ("slabContext_0",neighbouring_slab),("slabContext_1",neighbouring_column)))
     write_mesh(mesh_path,nodes,cells,5)
     elastic = elastic_matrix(config["young_modulus_pa"],config["poisson_ratio"])
     stress = [elastic@strain_matrix((0,0,0),dimensions)@displacement[(3*cell[:,None]+np.arange(3)).ravel()]

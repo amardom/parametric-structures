@@ -40,7 +40,7 @@ const projects = {
     selected: ["4", "flexible"],
     cases: window.vierendeelCases,
     subtitle: "Two steel facade frames · 12 m cantilever · Asymmetric floor loads",
-    question: "How much does the window opening rack if the facade bays get wider?",
+    question: "How do bay width and joint stiffness affect distortion of the window opening?",
     center: [3.4, 1.7],
     centerX: 4.5,
     span: 17,
@@ -346,7 +346,7 @@ const houseRenderMeshes = new WeakMap();
 const sweep = window.observatoryCases;
 let project;
 let colorLimit;
-const solidColors = { audPanel: [105, 165, 151], slabPlinth: [177, 164, 143], slabDuct: [82, 119, 136], slabOpening: [47, 103, 151], slabConcrete: [200, 192, 171], vierCore: [172, 163, 143], vierGround: [218, 216, 204], vierSteel: [62, 82, 83], vierDeck: [196, 193, 177], vierFloor: [116, 127, 123], vierWindow: [214, 113, 39], audSeat: [74, 115, 110], audDirect: [24, 162, 126], audCeiling: [241, 136, 59], audRear: [157, 101, 208], audOther: [138, 147, 151], facadeStone: [216, 195, 164], facadeGlass: [77, 97, 104], facadeFooting: [157, 166, 165], facadeSoil: [164, 134, 105], facadeProp: [138, 80, 57], facadeGaugeA: [37, 100, 180], facadeGaugeB: [188, 47, 44], hyparDoor: [77, 83, 79], hyparFrame: [35, 37, 37], housingGlass: [71, 81, 81], emblem: [149, 58, 39], emblemHammer: [166, 65, 43], emblemBacking: [177, 172, 159], timber: [192, 158, 117], wall: [177, 172, 159], roof: [213, 209, 195], glass: [115, 174, 181], steel: [68, 85, 88], column: [176, 153, 133], door: [64, 125, 138], anchor: [159, 88, 65] };
+const solidColors = { audPanel: [105, 165, 151], slabCut: [0, 132, 123], slabEast: [130, 90, 151], slabContext: [221, 222, 215], slabPlinth: [177, 164, 143], slabDuct: [82, 119, 136], slabOpening: [47, 103, 151], slabConcrete: [200, 192, 171], vierCore: [172, 163, 143], vierGround: [218, 216, 204], vierSteel: [62, 82, 83], vierDeck: [196, 193, 177], vierFloor: [116, 127, 123], vierWindow: [214, 113, 39], audSeat: [74, 115, 110], audDirect: [24, 162, 126], audCeiling: [241, 136, 59], audRear: [157, 101, 208], audOther: [138, 147, 151], facadeStone: [216, 195, 164], facadeGlass: [77, 97, 104], facadeFooting: [157, 166, 165], facadeSoil: [164, 134, 105], facadeProp: [138, 80, 57], facadeGaugeA: [37, 100, 180], facadeGaugeB: [188, 47, 44], hyparDoor: [77, 83, 79], hyparFrame: [35, 37, 37], housingGlass: [71, 81, 81], emblem: [149, 58, 39], emblemHammer: [166, 65, 43], emblemBacking: [177, 172, 159], timber: [192, 158, 117], wall: [177, 172, 159], roof: [213, 209, 195], glass: [115, 174, 181], steel: [68, 85, 88], column: [176, 153, 133], door: [64, 125, 138], anchor: [159, 88, 65] };
 const colorRamp = [[211, 225, 220], [65, 119, 131], [203, 126, 73]];
 const initialCamera = { azimuth: 0.40, elevation: 0.42, zoom: 1 };
 
@@ -400,6 +400,7 @@ function selectVariant() {
   stopAtriumAnimation();
   stopAuditoriumAudio();
   slabResponse.hidden = project !== slab || mode !== "result" || !variant;
+  document.querySelector("#slab-geometry-note").hidden = project !== slab || mode !== "cad" || !variant;
   vierendeelResponse.hidden = project !== vierendeel || mode !== "result" || !variant;
   auditoriumResponse.hidden = project !== auditorium || mode !== "result" || !variant;
   facadeResponse.hidden = project !== facade || mode !== "result" || !variant;
@@ -414,7 +415,7 @@ function selectVariant() {
   const bridgeStudy = project === bridge && mode === "result" && Boolean(variant?.loss);
   bridgeCondition.closest("label").hidden = !bridgeStudy;
   const hangerLoss = bridgeStudy && bridgeCondition.value === "loss";
-  hangerLossReadout.hidden = !hangerLoss;
+  document.querySelector("#hanger-loss-comparison").hidden = !hangerLoss;
   const extensionResults = project === extension && mode === "result" && Boolean(extensionDetails);
   extensionStudy.closest("label").hidden = !extensionResults;
   const connection = extensionResults ? extensionDetails.cases[extensionStudy.value] : undefined;
@@ -465,12 +466,17 @@ function selectVariant() {
   }
   if (project === slab) {
     caption.hidden = true;
-    parts = mode === "result" ? variant.result.parts : variant.cad;
+    parts = mode === "result" ? variant.result.parts.map(smoothSlabCut) : variant.cad;
     if (mode === "result") {
       const result = variant.result;
       readout.textContent = "Column reaction " + format.format(result.reaction_kn)
         + " kN · Vertical shear crossing the cut " + format.format(result.shear_kn) + " kN";
-      const labels = ["West", "East · Opening side", "South", "North"];
+      const labels = ["West", "East · Violet edge", "South", "North"];
+      document.querySelector("#slab-cut-reading").textContent = {
+        none: "With no opening, each side carries 25% of the shear crossing the cut.",
+        near: "The near opening interrupts the east face of the cut and produces the strongest local concentration.",
+        far: "The far opening lies outside the cut. The east side carries a slightly smaller share than with the near opening, while the local concentration is lower.",
+      }[key];
       const baseline = slab.cases.none.result.shares;
       document.querySelector("#slab-shares").replaceChildren(...result.shares.map((share, i) => {
         const row = document.createElement("tr");
@@ -522,9 +528,13 @@ function selectVariant() {
     parts = mode === "result" ? variant.result.parts : variant.cad;
     if (mode === "result") {
       const result = variant.result;
+      const movement = mm => (Math.abs(mm) < .005 ? "" : mm < 0 ? "↑ " : "↓ ")
+        + format.format(Math.abs(mm)) + " mm";
       readout.textContent = "Differential settlement A–B · " + format.format(result.difference_mm)
-        + " mm · A " + format.format(result.a_mm) + " mm · B " + format.format(result.b_mm) + " mm";
-      document.querySelector("#facade-stage-note").textContent = result.note;
+        + " mm · A " + movement(result.a_mm) + " · B " + movement(result.b_mm);
+      document.querySelector("#facade-stage-note").textContent = thickness.value === "permanent"
+        ? result.note + " The permanent structure takes load after settlement has already accumulated during excavation."
+        : result.note;
       const rows = result.history.map((entry, index) => {
         const row = document.createElement("tr");
         const heading = document.createElement("th");
@@ -689,11 +699,28 @@ function selectVariant() {
     readout.textContent = "Maximum deck deflection " + format.format(result.deck_mm)
       + " mm ↓ · Maximum hanger tension " + format.format(result.hanger_kn) + " kN";
     if (hangerLoss) {
+      const intact = variant.result;
+      const rows = [
+        ["Maximum deck deflection (mm)", intact.deck_mm, result.deck_mm],
+        ["Midspan deck edge difference (mm)", intact.edge_difference_mm, result.edge_difference_mm],
+        ["Maximum remaining hanger tension (kN)", intact.hanger_kn, result.hanger_kn],
+        ["Removed hanger tension (kN)", result.removed_hanger_kn, null],
+      ];
+      document.querySelector("#hanger-loss-values").replaceChildren(...rows.map(([label, before, after]) => {
+        const row = document.createElement("tr");
+        const heading = document.createElement("th");
+        heading.scope = "row";
+        heading.textContent = label;
+        row.append(heading);
+        row.insertCell().textContent = format.format(before);
+        row.insertCell().textContent = after === null ? "—" : format.format(after);
+        return row;
+      }));
       const change = Math.max(...result.hanger_changes_kn);
       const opposite = result.opposite_arch_change_kn;
-      readout.textContent += " · Midspan deck edge difference " + format.format(result.edge_difference_mm) + " mm";
+      readout.hidden = true;
       const net = (opposite >= 0 ? "+" : "−") + format.format(Math.abs(opposite));
-      hangerLossReadout.textContent = "Static loss, same deck load · Largest tension increase +" + format.format(change)
+      hangerLossReadout.textContent = "Largest tension increase +" + format.format(change)
         + " kN · Net change on opposite arch " + net + " kN"
         + " · Hanger colours show tension change (blue decrease, red increase, scale ±" + hangerChangeLimit + " kN)";
     }
@@ -1352,6 +1379,22 @@ function bridgeDeformedMeshes(points, result, vertical, geometry) {
   }
   parts.push(solid(shells.filter(face => sameCoordinate(face, 0, 0)), 0, -abutment, 0, deckOutline),
              solid(shells.filter(face => sameCoordinate(face, 0, span)), 0, 0, abutment, deckOutline));
+  if (result.hanger_changes_kn) {
+    const anchor = [span / 2, -width / 2, 0];
+    const index = result.points.findIndex((_, i) => i % 3 === 0
+      && anchor.every((value, axis) => Math.abs(result.points[i + axis] - value) < 1e-5));
+    if (index >= 0) {
+      const [x, y, z] = points.slice(index, index + 3);
+      const marker = { points: [], faces: [], color: [120, 54, 149] };
+      const segments = 20;
+      for (let i = 0; i < segments; i++) {
+        const angle = 2 * Math.PI * i / segments;
+        marker.points.push(x + .16 * Math.cos(angle), y + .16 * Math.sin(angle), z + deck / 2 + .015);
+        marker.faces.push([i, (i + 1) % segments]);
+      }
+      parts.push(marker);
+    }
+  }
   return parts;
 }
 
@@ -1593,6 +1636,26 @@ function displacementColor(millimetres) {
     value + fraction * (colorRamp[index + 1][channel] - value));
 }
 
+function smoothSlabCut(part) {
+  if (!part.compression) return part;
+  const samples = new Map();
+  const keys = part.faces.map((face, index) => {
+    const x = part.points[3 * face[0]];
+    const axis = face.every(node => part.points[3 * node] === x) ? 0 : 1;
+    const plane = part.points[3 * face[0] + axis];
+    return face.map(node => {
+      const key = [axis, plane, node].join(":");
+      const [sum, count] = samples.get(key) ?? [0, 0];
+      samples.set(key, [sum + part.compression[index], count + 1]);
+      return key;
+    });
+  });
+  return { ...part, cornerStress: keys.map(face => face.map(key => {
+    const [sum, count] = samples.get(key);
+    return sum / count;
+  })) };
+}
+
 function compressionColor(fraction) {
   const clamped = Math.max(0, Math.min(1, fraction));
   const [low, high] = [[231, 235, 228], [176, 57, 30]];
@@ -1623,22 +1686,26 @@ function render() {
   const ca = Math.cos(azimuth), sa = Math.sin(azimuth);
   const ce = Math.cos(elevation), se = Math.sin(elevation);
   const detail = project === canopy && mode === "result";
+  const slabGeometry = project === slab && mode === "cad";
   const connection = project === extension && mode === "result" && extensionDetails?.cases[extensionStudy.value];
   const compressionLimit = connection ? extensionDetailLimit() : project === slab ? .5 : 1;
   const span = detail ? 0.68 : (project.span ?? Number(width.value));
   const scale = project === brutalist ? Math.min(w / 27, h / (window.brutalistCases.storey_height_m * Number(width.value) + 5)) * zoom
     : connection ? Math.min(w / 1.50, h / 0.85) * zoom
     : detail ? Math.min(w / 1.05, h / 0.73) * zoom
+    : slabGeometry ? Math.min(w / 6.5, h / 4.3) * zoom
     : Math.min(w / (span + 3.5), h / project.viewHeight) * zoom;
   const midX = connection ? extensionDetails.geometry.column_offset_m
+    : slabGeometry ? .55
     : project === hypar ? Number(thickness.value) / 2 - .25 : project.centerX ?? (project.span ? 0 : span / 2);
   const [midY, midZ] = connection ? [0, extensionDetails.geometry.beam_depth_m / 2]
     : detail ? [-0.09, -0.1]
+    : slabGeometry ? [0, -.85]
     : project === brutalist ? [0, window.brutalistCases.storey_height_m * Number(width.value) / 2]
     : project === gable ? [project.center[0] - Number(thirdParameter.value) / 2, project.center[1]] : project.center;
   const polygons = [];
 
-  for (const { points, faces, material, vertical, diameter, opacity, compression, hangerChanges, color } of parts) {
+  for (const { points, faces, material, vertical, diameter, opacity, compression, cornerStress, hangerChanges, color } of parts) {
     const projected = [];
     for (let i = 0; i < points.length; i += 3) {
       const x = points[i] - midX, y = points[i + 1] - midY, z = points[i + 2] - midZ;
@@ -1677,6 +1744,8 @@ function render() {
         opacity: opacity ?? (material === "glass" && (project === observatory || project === house || project === canopy) ? 0.19
           : material === "door" ? 0.42 : 1),
         color: base.map((value) => Math.round(value * shade)),
+        cornerColors: cornerStress?.[faceIndex].map(value =>
+          compressionColor(value / compressionLimit).map(channel => channel * shade)),
       });
     }
   }

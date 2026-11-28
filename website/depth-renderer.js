@@ -37,7 +37,7 @@ function createDepthRenderer() {
     const opaque = [];
     const translucent = [];
     for (const polygon of polygons) {
-      const { corners, color, opacity = 1, lineWidth } = polygon;
+      const { corners, color, cornerColors, opacity = 1, lineWidth } = polygon;
       const vertices = opacity < 1 ? translucent : opaque;
       const [r, g, b] = color.map((value) => value / 255);
       let face = corners;
@@ -52,8 +52,11 @@ function createDepthRenderer() {
                 [c[0] + ox, c[1] + oy, c[2]], [a[0] + ox, a[1] + oy, a[2]]];
       }
       for (let i = 1; i < face.length - 1; i++) {
-        for (const [x, y, depth] of [face[0], face[i], face[i + 1]]) {
-          vertices.push(2 * x / w - 1, 1 - 2 * y / h, -depth / depthRange, r, g, b, opacity);
+        for (const index of [0, i, i + 1]) {
+          const [x, y, depth] = face[index];
+          const rgb = cornerColors?.[index];
+          vertices.push(2 * x / w - 1, 1 - 2 * y / h, -depth / depthRange,
+                        rgb ? rgb[0] / 255 : r, rgb ? rgb[1] / 255 : g, rgb ? rgb[2] / 255 : b, opacity);
         }
       }
     }

@@ -170,7 +170,8 @@ def draw_case(stem,config):
         for level in range(2):
             elevation.append(rect(x+i*bay*scale,y-(level+1)*height*scale,bay*scale,height*scale,
                                   "glass" if i == level == 0 else "roof"))
-    elevation += [*dimension(x,y,x+bay*scale,y,34,bay),
+    elevation += [label(x+bay*scale/2,y-height*scale/2,"Monitored window",anchor="middle"),
+                  *dimension(x,y,x+bay*scale,y,34,bay),
                   *dimension(x,y,x+length*scale,y,84,length)]
     sheet("elevation","Vierendeel facade elevation","VC-02",elevation)
     section = [rect(x,y-2*height*scale,width*scale,2*height*scale,"roof"),

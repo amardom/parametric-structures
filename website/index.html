@@ -13,7 +13,7 @@
   <script defer src="hypar-cases.js?v=hypar-uplift-comparison"></script>
   <script defer src="bridge-cases.js?v=hanger-loss"></script>
   <script defer src="extension-cases.js"></script>
-  <script defer src="depth-renderer.js"></script>
+  <script defer src="depth-renderer.js?v=vertex-colours"></script>
   <script defer src="extension-details.js"></script>
   <script defer src="brutalist-cases.js?v=core-accesses"></script>
   <script defer src="terrace-cases.js?v=balcony"></script>
@@ -22,8 +22,8 @@
   <script defer src="facade-cases.js?v=2"></script>
   <script defer src="auditorium-cases.js?v=standalone-study"></script>
   <script defer src="vierendeel-cases.js?v=1"></script>
-  <script defer src="slab-cases.js?v=duct-context"></script>
-  <script defer src="viewer.js?v=hypar-uplift-comparison"></script>
+  <script defer src="slab-cases.js?v=shear-cut"></script>
+  <script defer src="viewer.js?v=bridge-anchor-mark"></script>
 </head>
 <body>
   <aside>
@@ -150,14 +150,17 @@
     <p class="result" id="hypar-uplift-note" hidden></p>
     <p class="result" id="house-deflection-note" hidden>Deflections are measured at the floor and roof slab corners and above the door. Glazing is shown for context. Glazing movement allowance depends on the relative movement between its supports.</p>
     <p class="result" id="canopy-anchor-note" hidden>The geometry shows the full canopy. The analysis focuses on the wall anchorage under the tie-rod load. The table shows calculated tension and shear forces for each bolt.</p>
+    <p class="result" id="slab-geometry-note" hidden>The pale slab extension and neighbouring column show where the local model sits in a floor bay.</p>
     <section id="slab-response" class="housing-optimization" hidden>
       <h2>Load transfer around the column</h2>
-      <p><span class="compression-swatch" aria-hidden="true"></span> Vertical shear stress on the cut · 0 to 0.50 MPa</p>
+      <p>The table reports the share of vertical shear crossing each side of the cut. The violet dashes mark its east side, towards the opening.</p>
       <table>
         <thead><tr><th scope="col">Side of study cut</th><th scope="col">Share of shear</th></tr></thead>
         <tbody id="slab-shares"></tbody>
       </table>
-      <p>The blue outline marks the service opening. The duct and base pad provide 3D context. East is the side of the study cut facing the opening. Changes in parentheses are percentage points relative to the slab without an opening.</p>
+      <p id="slab-cut-reading"></p>
+      <p><span class="compression-swatch" aria-hidden="true"></span> Local vertical shear stress · 0 to 0.50 MPa. Interpolated colours show where shear concentrates. Local peaks depend on mesh size.</p>
+      <p>Blue outlines the service opening. Values in parentheses are changes in percentage points from the slab without an opening.</p>
       <div class="model-assumptions">
         <h3>Model assumptions</h3>
         <p>Linear-elastic 3D concrete solids. The same 300 kN is distributed over the available slab surface in each variant. The cut is a fixed 1 m square. The shares come from the integrated vertical forces crossing the cut. Loads applied inside that square go to the column without crossing the cut.</p>
@@ -205,7 +208,15 @@
       </div>
     </section>
     <p id="connection-assumptions" class="result" hidden></p>
-    <p class="result" id="hanger-loss-readout" hidden></p>
+    <section class="housing-optimization" id="hanger-loss-comparison" aria-labelledby="hanger-loss-heading" hidden>
+      <h2 id="hanger-loss-heading">Static hanger removal</h2>
+      <p>Both cases use the same deck load. The violet ring marks the removed hanger’s deck anchorage.</p>
+      <table>
+        <thead><tr><th scope="col">Result</th><th scope="col">Intact</th><th scope="col">Hanger removed</th></tr></thead>
+        <tbody id="hanger-loss-values"></tbody>
+      </table>
+      <p id="hanger-loss-readout"></p>
+    </section>
     <p class="result" id="gable-reactions" hidden></p>
     <p class="result" id="gable-uplift-note" hidden></p>
     <p class="result" id="shelter-reactions" hidden></p>
