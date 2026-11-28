@@ -49,11 +49,11 @@
     </nav>
     <section class="sidebar-methodology" aria-labelledby="methodology-heading">
       <h2 class="sidebar-heading" id="methodology-heading">Methodology</h2>
-      <p>Finite element analyses are performed in <a href="https://github.com/ElmerCSC/elmerfem">Elmer</a>, with custom elements using <a href="https://gcc.gnu.org/onlinedocs/gfortran/Fortran-2003-status.html">Fortran 2003</a> syntax.</p>
+      <p>Finite element analyses are performed in <a href="https://github.com/ElmerCSC/elmerfem" target="_blank" rel="noopener">Elmer</a>, with custom elements using <a href="https://gcc.gnu.org/onlinedocs/gfortran/Fortran-2003-status.html" target="_blank" rel="noopener">Fortran 2003</a> syntax.</p>
       <p>Beams and hangers are modelled with 1D elements, slabs and walls with shells, and local details with 3D solids.</p>
-      <p>Structural optimisation is performed in Python using <a href="https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html">SciPy SLSQP</a>, with constraints evaluated in <a href="https://github.com/ElmerCSC/elmerfem">Elmer</a>.</p>
+      <p>Structural optimisation is performed in Python using <a href="https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html" target="_blank" rel="noopener">SciPy SLSQP</a>, with constraints evaluated in <a href="https://github.com/ElmerCSC/elmerfem" target="_blank" rel="noopener">Elmer</a>.</p>
     </section>
-    <p class="sidebar-source">Source code on GitHub · <a href="https://github.com/amardom/parametric-structures" style="overflow-wrap: anywhere">https://github.com/amardom/parametric-structures</a></p>
+    <p class="sidebar-source">Source code on GitHub · <a href="https://github.com/amardom/parametric-structures" target="_blank" rel="noopener" style="overflow-wrap: anywhere">https://github.com/amardom/parametric-structures</a></p>
   </aside>
   <main>
     <h1>Concrete Shelter</h1>
@@ -262,14 +262,14 @@
       <div class="housing-equations">
         <p><strong>Minimise</strong> V(t) = V<sub>slabs</sub> + Σ<sub>j=1…6</sub> A<sub>j</sub>t<sub>j</sub></p>
         <p><strong>Check drift</strong> max<sub>i</sub> |u<sub>i</sub>(t) − u<sub>i−1</sub>(t)| / h<sub>i</sub> ≤ <span id="housing-equation-limit"></span></p>
-        <p>A<sub>j</sub> is the wall centreline area. u<sub>i</sub> is the floor-average lateral displacement from <a href="https://github.com/ElmerCSC/elmerfem">Elmer</a>. h<sub>i</sub> is the storey height.</p>
+        <p>A<sub>j</sub> is the wall centreline area. u<sub>i</sub> is the floor-average lateral displacement from <a href="https://github.com/ElmerCSC/elmerfem" target="_blank" rel="noopener">Elmer</a>. h<sub>i</sub> is the storey height.</p>
       </div>
       <table id="housing-thicknesses">
         <caption>Uniform → optimised wall thicknesses (mm)</caption>
         <thead><tr><th scope="col">Band</th><th scope="col">Storeys</th><th scope="col">Core</th><th scope="col">Shear walls</th></tr></thead>
         <tbody></tbody>
       </table>
-      <p class="result"><span id="housing-governing"></span> <a href="https://github.com/ElmerCSC/elmerfem">Elmer</a> evaluations</p>
+      <p class="result"><span id="housing-governing"></span> <a href="https://github.com/ElmerCSC/elmerfem" target="_blank" rel="noopener">Elmer</a> evaluations</p>
     </section>
     <table id="bolt-forces" hidden>
       <caption>Anchor bolt forces at the concrete face</caption>
